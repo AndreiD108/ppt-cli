@@ -13,7 +13,7 @@ ifdef INSTALL_DIR
   WRAPPER := $(INSTALL_DIR)/ppt-cli
 endif
 
-.PHONY: install uninstall test help
+.PHONY: install uninstall test clean-cache help
 
 define write_wrapper
 	@mkdir -p "$(INSTALL_DIR)"
@@ -57,11 +57,16 @@ else
 endif
 	@echo "Uninstalled: ppt-cli"
 
+clean-cache:
+	@rm -rf /tmp/ppt-cli /tmp/ppt-cli-screenshots
+	@echo "Removed /tmp/ppt-cli and /tmp/ppt-cli-screenshots"
+
 help:
 	@echo "Targets:"
-	@echo "  install    Create venv, install deps, install ppt-cli"
-	@echo "  uninstall  Remove ppt-cli"
-	@echo "  test       Run test suite"
+	@echo "  install      Create venv, install deps, install ppt-cli"
+	@echo "  uninstall    Remove ppt-cli"
+	@echo "  test         Run test suite"
+	@echo "  clean-cache  Remove /tmp staging dirs and screenshot cache"
 	@echo ""
 	@echo "Optional system deps (for screenshot command):"
 ifeq ($(UNAME),Darwin)
