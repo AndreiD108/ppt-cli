@@ -1,7 +1,7 @@
 PROJECT_DIR := $(shell pwd)
 VENV        := $(PROJECT_DIR)/.venv
 UNAME       := $(shell uname -s)
-HAS_INSTALLEX := $(shell command -v installex 2>/dev/null && echo 1 || echo 0)
+HAS_INSTALLEX := $(shell command -v installex >/dev/null 2>&1 && echo 1 || echo 0)
 
 ifeq ($(UNAME),Darwin)
   INSTALL_DIR := $(HOME)/.local/bin
