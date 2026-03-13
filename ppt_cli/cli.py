@@ -7,6 +7,7 @@ from .cmd_inspect import cmd_info, cmd_list, cmd_dump, cmd_peek, cmd_screenshot
 from .cmd_text import cmd_set_text, cmd_set_title, cmd_set_notes, cmd_replace_text
 from .cmd_structure import cmd_add_slide, cmd_delete_slide, cmd_reorder, cmd_duplicate
 from .cmd_content import cmd_add_image, cmd_add_textbox, cmd_add_table, cmd_delete_shape
+from .cmd_image_gen import cmd_image_gen
 from .cmd_style import cmd_set_font, cmd_set_fill, cmd_set_position
 from .cmd_internals import (
     cmd_stage, cmd_analyze, cmd_fingerprint, cmd_build, cmd_build_template,
@@ -288,16 +289,52 @@ Run 'ppt-cli usage-examples' for detailed workflow examples.
     s.set_defaults(func=cmd_duplicate)
 
     # ── add-image ──
-    s = sub.add_parser("add-image", help="Add an image to a slide")
+    s = sub.add_parser(
+        "add-image",
+        help="Add an image to a slide (from file or AI-generated)",
+        description="Insert an image into a slide. Provide a local file path, "
+        "or use --prompt to generate one with AI (requires GEMINI_API_KEY env var). "
+        "--w/--h control the shape size on the slide regardless of image source.",
+    )
     s.add_argument("file")
     s.add_argument("slide", type=int)
-    s.add_argument("image", help="Path to image file")
+    s.add_argument("image", nargs="?", default=None,
+                   help="Path to image file (omit when using --prompt)")
+    s.add_argument("--prompt",
+                   help="Generate image with AI from this description (requires GEMINI_API_KEY env var)")
+    s.add_argument("--resolution", choices=["512", "1k", "2k"], default="1k",
+                   help="Generated image pixel resolution (default: 1k). Only with --prompt")
+    s.add_argument("--ratio",
+                   help="Aspect ratio for generation (e.g. 16:9). Auto-guessed from --w/--h if both given. Only with --prompt")
+    s.add_argument("--grounding", choices=["search", "image", "full"], default=None,
+                   help="Ground generation with web search (search), image search (image), or both (full). Only with --prompt")
+    s.add_argument("--reasoning", action="store_true",
+                   help="Enable model reasoning for better results (slower). Only with --prompt")
     s.add_argument("--x", help="Left position (e.g. 1in)")
     s.add_argument("--y", help="Top position")
-    s.add_argument("--w", help="Width")
-    s.add_argument("--h", help="Height")
+    s.add_argument("--w", help="Width of the shape on the slide (e.g. 8in)")
+    s.add_argument("--h", help="Height of the shape on the slide (e.g. 4.5in)")
     s.add_argument("-o", "--output", help="Save to a new file instead of overwriting the input")
     s.set_defaults(func=cmd_add_image)
+
+    # ── image-gen ──
+    s = sub.add_parser("image-gen",
+                       help="Generate images with AI (requires GEMINI_API_KEY)")
+    s.add_argument("prompt", help="Text description of the image to generate")
+    s.add_argument("--resolution", choices=["512", "1k", "2k"], default="1k",
+                   help="Pixel resolution (default: 1k)")
+    s.add_argument("--ratio",
+                   help="Aspect ratio (e.g. 16:9, 1:1)")
+    s.add_argument("--grounding", choices=["search", "image", "full"], default=None,
+                   help="Ground generation with web search (search), image search (image), or both (full)")
+    s.add_argument("--reasoning", action="store_true",
+                   help="Enable model reasoning for better results (slower)")
+    s.add_argument("--count", type=int, default=1,
+                   help="Number of images to generate (in parallel)")
+    s.add_argument("-o", "--output",
+                   help="Output path (default: /tmp/ppt-cli/image-gen/{name}.png). "
+                        "With --count N: appends _1, _2, etc. before extension")
+    s.set_defaults(func=cmd_image_gen)
 
     # ── add-textbox ──
     s = sub.add_parser("add-textbox", help="Add a textbox to a slide")

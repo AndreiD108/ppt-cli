@@ -8,6 +8,10 @@ ppt-cli add-slide deck.pptx --layout "Title Slide"
 ppt-cli set-title deck.pptx 1 "Hello World"
 ppt-cli peek deck.pptx
 
+ppt-cli add-image deck.pptx 1 --prompt "a bar chart of Q1 revenue" --w 8in --h 4.5in
+ppt-cli image-gen "a sunset over mountains" --resolution 2k --ratio 16:9
+ppt-cli image-gen "product icons" --count 4 -o icons.png
+
 ppt-cli internals stage deck.pptx       # extract .pptx for XML editing
 ppt-cli internals analyze deck.pptx     # layout/master/media inventory
 ppt-cli internals build <dir> out.pptx  # rebuild from staged directory
@@ -17,6 +21,8 @@ ppt-cli create new.pptx --template corp # create from template
 ```
 
 Run `ppt-cli --help` for the full command list.
+
+AI image generation (`add-image --prompt` and `image-gen`) uses Gemini 3.1 Flash (`gemini-3.1-flash-image-preview`) and requires a `GEMINI_API_KEY` env var.
 
 ## Setup
 
@@ -45,6 +51,8 @@ ppt-cli/
 │   ├── cmd_text.py          # cmd_set_text, cmd_set_title, cmd_set_notes, cmd_replace_text
 │   ├── cmd_structure.py     # cmd_add_slide, cmd_delete_slide, cmd_reorder, cmd_duplicate
 │   ├── cmd_content.py       # cmd_add_image, cmd_add_textbox, cmd_add_table, cmd_delete_shape
+│   ├── cmd_image_gen.py     # cmd_image_gen (standalone AI image generation)
+│   ├── image_gen.py         # Google Gemini image generation engine (generate_image, generate_image_name)
 │   ├── cmd_style.py         # cmd_set_font, cmd_set_fill, cmd_set_position
 │   ├── cmd_internals.py     # stage, analyze, fingerprint, build, build-template,
 │   │                        #   delete/duplicate/add for slide/layout/master
@@ -61,12 +69,13 @@ ppt-cli/
 │   ├── test_text.py
 │   ├── test_structure.py
 │   ├── test_content.py
+│   ├── test_image_gen.py
 │   ├── test_style.py
 │   ├── test_internals_stage.py
 │   ├── test_internals_mutate.py
 │   └── test_template.py
 ├── Makefile
-└── requirements.txt         # python-pptx, pytest
+└── requirements.txt         # python-pptx, google-genai, pytest
 ```
 
 ## Architecture rules

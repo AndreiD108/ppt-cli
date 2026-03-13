@@ -13,7 +13,7 @@ ifdef INSTALL_DIR
   WRAPPER := $(INSTALL_DIR)/ppt-cli
 endif
 
-.PHONY: install uninstall test clean-cache help
+.PHONY: install uninstall test clean-cache check help
 
 define write_wrapper
 	@mkdir -p "$(INSTALL_DIR)"
@@ -61,21 +61,50 @@ clean-cache:
 	@rm -rf /tmp/ppt-cli /tmp/ppt-cli-screenshots
 	@echo "Removed /tmp/ppt-cli and /tmp/ppt-cli-screenshots"
 
+check:
+	@echo "=== ppt-cli environment check ==="
+	@echo ""
+	@echo "— LibreOffice (for screenshot command):"
+	@if command -v libreoffice >/dev/null 2>&1; then \
+		echo "  ✓ libreoffice found: $$(command -v libreoffice)"; \
+	else \
+		echo "  ✗ libreoffice not found"; \
+		echo "    Install: sudo apt install libreoffice  (Linux)"; \
+		echo "             brew install --cask libreoffice  (macOS)"; \
+	fi
+	@echo ""
+	@echo "— pdftoppm (for screenshot command):"
+	@if command -v pdftoppm >/dev/null 2>&1; then \
+		echo "  ✓ pdftoppm found: $$(command -v pdftoppm)"; \
+	else \
+		echo "  ✗ pdftoppm not found"; \
+		echo "    Install: sudo apt install poppler-utils  (Linux)"; \
+		echo "             brew install poppler  (macOS)"; \
+	fi
+	@echo ""
+	@echo "— GEMINI_API_KEY (for add-image --prompt and image-gen):"
+	@if [ -n "$$GEMINI_API_KEY" ]; then \
+		echo "  ✓ GEMINI_API_KEY is set"; \
+	else \
+		echo "  ✗ GEMINI_API_KEY not set"; \
+		echo "    Get one at: https://aistudio.google.com/api-keys"; \
+		echo "    Then: export GEMINI_API_KEY=\"your-key\""; \
+	fi
+
 help:
 	@echo "Targets:"
 	@echo "  install      Create venv, install deps, install ppt-cli"
 	@echo "  uninstall    Remove ppt-cli"
 	@echo "  test         Run test suite"
+	@echo "  check        Check optional dependencies (libreoffice, GEMINI_API_KEY)"
 	@echo "  clean-cache  Remove /tmp staging dirs and screenshot cache"
 	@echo ""
-	@echo "Optional system deps (for screenshot command):"
-ifeq ($(UNAME),Darwin)
-	@echo "  brew install --cask libreoffice   Renders slides to PDF"
-	@echo "  brew install poppler              Converts PDF pages to PNG (pdftoppm)"
-else
-	@echo "  libreoffice     Renders slides to PDF"
-	@echo "  poppler-utils   Converts PDF pages to PNG (pdftoppm)"
-endif
+	@echo "Optional dependencies:"
+	@echo "  libreoffice + poppler   For the screenshot command"
+	@echo "  GEMINI_API_KEY          For AI image generation (add-image --prompt, image-gen)"
+	@echo "                          Get one at: https://aistudio.google.com/api-keys"
+	@echo ""
+	@echo "Run 'make check' to verify your environment."
 ifdef INSTALL_DIR
 	@echo ""
 	@echo "Ensure $(INSTALL_DIR) is in your PATH"

@@ -2,6 +2,42 @@
 
 import json
 import os
+import struct
+import subprocess
+import sys
+import zlib
+
+PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def _write_minimal_png(path):
+    """Write a minimal 1x1 PNG file."""
+    sig = b'\x89PNG\r\n\x1a\n'
+    ihdr_data = struct.pack('>IIBBBBB', 1, 1, 8, 2, 0, 0, 0)
+    ihdr_crc = zlib.crc32(b'IHDR' + ihdr_data) & 0xFFFFFFFF
+    ihdr = struct.pack('>I', 13) + b'IHDR' + ihdr_data + struct.pack('>I', ihdr_crc)
+    raw = zlib.compress(b'\x00\xff\x00\x00')
+    idat_crc = zlib.crc32(b'IDAT' + raw) & 0xFFFFFFFF
+    idat = struct.pack('>I', len(raw)) + b'IDAT' + raw + struct.pack('>I', idat_crc)
+    iend_crc = zlib.crc32(b'IEND') & 0xFFFFFFFF
+    iend = struct.pack('>I', 0) + b'IEND' + struct.pack('>I', iend_crc)
+    with open(path, "wb") as f:
+        f.write(sig + ihdr + idat + iend)
+
+
+def _cli_no_api_key(tmp_path):
+    """Return a CLI runner with GEMINI_API_KEY explicitly removed."""
+    env = {**os.environ, "PYTHONPATH": PROJECT_DIR}
+    env.pop("GEMINI_API_KEY", None)
+
+    def run(*args):
+        result = subprocess.run(
+            [sys.executable, "-m", "ppt_cli", *args],
+            capture_output=True, text=True, cwd=str(tmp_path), env=env,
+        )
+        return result.returncode, result.stdout, result.stderr
+
+    return run
 
 
 def test_add_textbox(cli, deck_with_slide):
@@ -48,28 +84,8 @@ def test_add_table(cli, deck_with_slide, tmp_path):
 
 def test_add_image(cli, deck_with_slide, tmp_path):
     path, _ = deck_with_slide
-    # Create a minimal 1x1 PNG
     img_path = str(tmp_path / "pixel.png")
-    import struct
-    import zlib
-
-    def _minimal_png():
-        sig = b'\x89PNG\r\n\x1a\n'
-        # IHDR
-        ihdr_data = struct.pack('>IIBBBBB', 1, 1, 8, 2, 0, 0, 0)
-        ihdr_crc = zlib.crc32(b'IHDR' + ihdr_data) & 0xFFFFFFFF
-        ihdr = struct.pack('>I', 13) + b'IHDR' + ihdr_data + struct.pack('>I', ihdr_crc)
-        # IDAT
-        raw = zlib.compress(b'\x00\xff\x00\x00')
-        idat_crc = zlib.crc32(b'IDAT' + raw) & 0xFFFFFFFF
-        idat = struct.pack('>I', len(raw)) + b'IDAT' + raw + struct.pack('>I', idat_crc)
-        # IEND
-        iend_crc = zlib.crc32(b'IEND') & 0xFFFFFFFF
-        iend = struct.pack('>I', 0) + b'IEND' + struct.pack('>I', iend_crc)
-        return sig + ihdr + idat + iend
-
-    with open(img_path, "wb") as f:
-        f.write(_minimal_png())
+    _write_minimal_png(img_path)
 
     rc, out, _ = cli("add-image", path, "1", img_path, "--x", "1in", "--y", "1in")
     assert rc == 0
@@ -92,3 +108,63 @@ def test_delete_shape(cli, deck_with_slide):
     dump = json.loads(out)
     shape_ids = [s["id"] for s in dump["shapes"]]
     assert shape_id not in shape_ids
+
+
+# ── add-image --prompt validation tests (no API calls) ──
+
+
+def test_add_image_both_image_and_prompt(cli, deck_with_slide, tmp_path):
+    """Error when both image path and --prompt are given."""
+    path, _ = deck_with_slide
+    img_path = str(tmp_path / "pixel.png")
+    _write_minimal_png(img_path)
+    rc, out, err = cli("add-image", path, "1", img_path, "--prompt", "a sunset")
+    assert rc != 0
+    assert "not both" in err.lower()
+
+
+def test_add_image_neither_image_nor_prompt(cli, deck_with_slide):
+    """Error when neither image path nor --prompt is given."""
+    path, _ = deck_with_slide
+    rc, out, err = cli("add-image", path, "1")
+    assert rc != 0
+    assert "image path or --prompt" in err.lower()
+
+
+def test_add_image_resolution_without_prompt(cli, deck_with_slide, tmp_path):
+    """Error when --resolution is used without --prompt."""
+    path, _ = deck_with_slide
+    img_path = str(tmp_path / "pixel.png")
+    _write_minimal_png(img_path)
+    rc, out, err = cli("add-image", path, "1", img_path, "--resolution", "2k")
+    assert rc != 0
+    assert "--prompt" in err
+
+
+def test_add_image_ratio_without_prompt(cli, deck_with_slide, tmp_path):
+    """Error when --ratio is used without --prompt."""
+    path, _ = deck_with_slide
+    img_path = str(tmp_path / "pixel.png")
+    _write_minimal_png(img_path)
+    rc, out, err = cli("add-image", path, "1", img_path, "--ratio", "16:9")
+    assert rc != 0
+    assert "--prompt" in err
+
+
+def test_add_image_invalid_ratio(cli, deck_with_slide):
+    """Error on unsupported --ratio value with --prompt."""
+    path, _ = deck_with_slide
+    rc, out, err = cli("add-image", path, "1", "--prompt", "a cat", "--ratio", "99:1")
+    assert rc != 0
+    assert "unsupported aspect ratio" in err.lower()
+
+
+def test_add_image_prompt_without_api_key(tmp_path):
+    """Error when --prompt is used without GEMINI_API_KEY."""
+    run = _cli_no_api_key(tmp_path)
+    pptx = str(tmp_path / "deck.pptx")
+    run("create", pptx)
+    run("add-slide", pptx, "--layout", "Title Slide")
+    rc, out, err = run("add-image", pptx, "1", "--prompt", "a cat")
+    assert rc != 0
+    assert "GEMINI_API_KEY" in err
