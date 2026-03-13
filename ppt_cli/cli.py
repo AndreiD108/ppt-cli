@@ -8,6 +8,7 @@ from .cmd_text import cmd_set_text, cmd_set_title, cmd_set_notes, cmd_replace_te
 from .cmd_structure import cmd_add_slide, cmd_delete_slide, cmd_reorder, cmd_duplicate
 from .cmd_content import cmd_add_image, cmd_add_textbox, cmd_add_table, cmd_delete_shape
 from .cmd_image_gen import cmd_image_gen
+from .cmd_guidelines import cmd_guidelines_overview, cmd_guidelines_design, cmd_guidelines_image_gen
 from .cmd_style import cmd_set_font, cmd_set_fill, cmd_set_position
 from .cmd_internals import (
     cmd_stage, cmd_analyze, cmd_fingerprint, cmd_build, cmd_build_template,
@@ -175,6 +176,25 @@ Run 'ppt-cli usage-examples' for detailed workflow examples.
     # ── usage-examples ──
     s = sub.add_parser("usage-examples", help="Show detailed workflow examples")
     s.set_defaults(func=_cmd_usage_examples)
+
+    # ── guidelines ──
+    s_guide = sub.add_parser(
+        "guidelines",
+        help="Design and prompting guidelines for building presentations",
+        description="Reference guidelines for building professional presentations. "
+        "Read 'design' before starting any deck. Read 'image-gen' only when "
+        "AI-generated images are part of the plan.",
+    )
+    guide_sub = s_guide.add_subparsers(dest="guidelines_command")
+    s_guide.set_defaults(func=cmd_guidelines_overview)
+
+    s = guide_sub.add_parser("design",
+                             help="Presentation design principles and QA workflow")
+    s.set_defaults(func=cmd_guidelines_design)
+
+    s = guide_sub.add_parser("image-gen",
+                             help="Image prompt engineering for AI-generated visuals")
+    s.set_defaults(func=cmd_guidelines_image_gen)
 
     # ── create ──
     s = sub.add_parser("create", help="Create a new empty .pptx file")
