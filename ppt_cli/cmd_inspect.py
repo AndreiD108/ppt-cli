@@ -52,21 +52,22 @@ def cmd_list(args):
 def cmd_dump(args):
     prs = _open(args.file)
     if args.all:
-        result = []
-        for i, s in enumerate(prs.slides, 1):
-            d = _dump_slide(s, i)
-            if _is_hidden(s):
-                d["hidden"] = True
-            result.append(d)
-        print(json.dumps(result, indent=2))
+        slide_nums = list(range(1, len(prs.slides) + 1))
     else:
-        if args.slide is None:
-            _die("specify a slide number or --all")
-        slide = _get_slide(prs, args.slide)
-        d = _dump_slide(slide, args.slide)
+        slide_nums = args.slides
+    if not slide_nums:
+        _die("specify slide number(s) or --all")
+    result = []
+    for n in slide_nums:
+        slide = _get_slide(prs, n)
+        d = _dump_slide(slide, n)
         if _is_hidden(slide):
             d["hidden"] = True
-        print(json.dumps(d, indent=2))
+        result.append(d)
+    if len(result) == 1:
+        print(json.dumps(result[0], indent=2))
+    else:
+        print(json.dumps(result, indent=2))
 
 
 def _peek_with_hidden(slide, num):
@@ -78,14 +79,17 @@ def _peek_with_hidden(slide, num):
 
 def cmd_peek(args):
     prs = _open(args.file)
-    if args.all or args.slide is None:
-        for i, slide in enumerate(prs.slides, 1):
-            if i > 1:
-                print()
-            print(_peek_with_hidden(slide, i))
+    if args.all or not args.slides:
+        slide_nums = list(range(1, len(prs.slides) + 1))
     else:
-        slide = _get_slide(prs, args.slide)
-        print(_peek_with_hidden(slide, args.slide))
+        slide_nums = args.slides
+    first = True
+    for n in slide_nums:
+        slide = _get_slide(prs, n)
+        if not first:
+            print()
+        print(_peek_with_hidden(slide, n))
+        first = False
 
 
 def _is_snap_lo(lo_path):

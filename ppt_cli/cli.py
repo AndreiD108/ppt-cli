@@ -222,14 +222,14 @@ Run 'ppt-cli usage-examples' for detailed workflow examples.
                        "text, and styles. For a compact overview with shape IDs and text "
                        "previews, use 'ppt-cli peek' instead.")
     s.add_argument("file")
-    s.add_argument("slide", nargs="?", type=int)
+    s.add_argument("slides", nargs="*", type=int, help="Slide number(s) (e.g. 1, or 1 3 5)")
     s.add_argument("--all", action="store_true", help="Dump all slides")
     s.set_defaults(func=cmd_dump)
 
     # ── peek ──
     s = sub.add_parser("peek", help="Compact summary: shape IDs, types, and text preview")
     s.add_argument("file")
-    s.add_argument("slide", nargs="?", type=int)
+    s.add_argument("slides", nargs="*", type=int, help="Slide number(s) (e.g. 1, or 1 3 5)")
     s.add_argument("--all", action="store_true", help="Peek all slides (default if no slide given)")
     s.set_defaults(func=cmd_peek)
 
