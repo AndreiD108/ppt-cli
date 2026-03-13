@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ppt-cli"
+dynamic = ["version"]
+description = "CLI tool for creating and manipulating PowerPoint presentations"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+keywords = ["powerpoint", "pptx", "ppt", "cli", "slides", "presentation", "agent", "tool", "skill"]
+dependencies = ["python-pptx", "google-genai"]
+
+[project.scripts]
+ppt-cli = "ppt_cli.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/AndreiD108/ppt-cli"
+
+[tool.setuptools.dynamic]
+version = {attr = "ppt_cli.__version__"}

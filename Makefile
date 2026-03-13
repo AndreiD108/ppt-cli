@@ -13,7 +13,7 @@ ifdef INSTALL_DIR
   WRAPPER := $(INSTALL_DIR)/ppt-cli
 endif
 
-.PHONY: install uninstall test clean-cache check help
+.PHONY: install uninstall test clean clean-cache check help
 
 define write_wrapper
 	@mkdir -p "$(INSTALL_DIR)"
@@ -56,6 +56,10 @@ else
 	@rm -f "$(WRAPPER)"
 endif
 	@echo "Uninstalled: ppt-cli"
+
+clean:
+	@rm -rf dist/ build/ ppt_cli.egg-info/
+	@echo "Removed dist/, build/, ppt_cli.egg-info/"
 
 clean-cache:
 	@rm -rf /tmp/ppt-cli /tmp/ppt-cli-screenshots
