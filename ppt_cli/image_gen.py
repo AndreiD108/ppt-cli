@@ -42,9 +42,13 @@ def _build_tools(grounding):
 
 
 def generate_image(prompt, resolution="1k", aspect_ratio=None, grounding=None,
-                   reasoning=False):
-    """Generate an image from a text prompt. Returns io.BytesIO with PNG data."""
+                   reasoning=False, ref_images=None):
+    """Generate an image from a text prompt. Returns io.BytesIO with PNG data.
+
+    ref_images: optional list of file paths to include as reference images.
+    """
     from google.genai import types
+    from PIL import Image
 
     config_kwargs = {
         "image_config": types.ImageConfig(
@@ -62,7 +66,12 @@ def generate_image(prompt, resolution="1k", aspect_ratio=None, grounding=None,
         config_kwargs["tools"] = tools
 
     config = types.GenerateContentConfig(**config_kwargs)
-    contents = [types.Content(role="user", parts=[types.Part.from_text(text=prompt)])]
+
+    content_parts = [prompt]
+    if ref_images:
+        for img_path in ref_images:
+            content_parts.append(Image.open(img_path))
+    contents = content_parts
 
     client = _get_client()
     last_error = None

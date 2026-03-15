@@ -9,13 +9,13 @@ import sys
 from lxml import etree
 
 from .helpers import _die, Presentation
-from .staging import _stage, _resolve_staged_or_file, _staging_dir
+from .staging import _stage, _resolve_staged_or_file
 from .ooxml import (
-    NS_A, NS_R, NS_P, NS_CT, NS_REL,
+    NS_A, NS_R, NS_P, NS_REL,
     RT_SLIDE, RT_SLIDE_LAYOUT, RT_SLIDE_MASTER, RT_THEME, RT_NOTES_SLIDE,
-    CT_SLIDE, CT_SLIDE_LAYOUT, CT_SLIDE_MASTER, CT_NOTES_SLIDE, CT_THEME,
+    CT_SLIDE, CT_SLIDE_LAYOUT, CT_SLIDE_MASTER, CT_NOTES_SLIDE,
     _parse_xml, _write_xml, _rels_path_for,
-    _get_rels, _add_rel, _remove_rel, _find_rel_by_target, _find_rel_by_type,
+    _get_rels, _add_rel, _remove_rel, _find_rel_by_target,
     _add_content_type_override, _remove_content_type_override,
     _get_slide_ids, _next_slide_id, _next_part_number,
     _build_pptx, _validate_staged, _prune_unused,
@@ -23,7 +23,6 @@ from .ooxml import (
 )
 from .template_registry import (
     _validate_template_name, _ensure_template_dir, _save_to_registry,
-    _get_template_path,
 )
 
 

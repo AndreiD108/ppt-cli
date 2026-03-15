@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Business Palette Preview</title>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a1a; color: #ccc; font-family: system-ui, sans-serif; padding: 40px; }
+  h1 { text-align: center; margin-bottom: 40px; font-size: 24px; color: #eee; }
+
+  .theme { margin-bottom: 60px; }
+  .theme-name { font-size: 20px; font-weight: bold; margin-bottom: 4px; color: #eee; }
+  .theme-font-label { font-size: 13px; margin-bottom: 4px; color: #ddd; font-family: monospace; }
+  .theme-desc { font-size: 13px; margin-bottom: 8px; color: #aaa; }
+  .theme-colors { font-size: 13px; margin-bottom: 16px; color: #999; font-family: monospace; }
+  .theme-colors span { margin-right: 12px; }
+  .swatch {
+    display: inline-block; width: 10px; height: 10px; border-radius: 2px;
+    margin-right: 4px; vertical-align: middle; border: 1px solid rgba(255,255,255,0.15);
+  }
+
+  .slides { display: flex; gap: 24px; overflow-x: auto; padding-bottom: 8px; }
+  .slide {
+    width: 480px; height: 270px; border-radius: 4px;
+    position: relative; overflow: hidden; flex-shrink: 0;
+  }
+  .slide-label {
+    position: absolute; bottom: 8px; right: 12px;
+    font-size: 10px; opacity: 0.5; font-family: monospace;
+  }
+  .logo {
+    position: absolute; bottom: 10px; right: 14px;
+    font-size: 9px; font-weight: bold; letter-spacing: 1.5px;
+    font-family: var(--header-font); opacity: 0.5;
+  }
+
+  /* Title slide */
+  .slide-title .title { position: absolute; font-size: 28px; font-weight: bold; left: 32px; top: 80px; font-family: var(--header-font); }
+  .slide-title .subtitle { position: absolute; font-size: 14px; left: 32px; top: 120px; font-family: var(--body-font); }
+  .slide-title .accent-bar { position: absolute; left: 32px; top: 150px; height: 3px; width: 60px; }
+
+  /* Content slide */
+  .slide-content .accent-strip { position: absolute; left: 0; top: 0; width: 4px; height: 100%; }
+  .slide-content .heading { position: absolute; font-size: 18px; font-weight: bold; left: 28px; top: 24px; font-family: var(--header-font); }
+  .slide-content .body-line { position: absolute; font-size: 12px; left: 28px; font-family: var(--body-font); }
+  .slide-content .stat-box {
+    position: absolute; right: 28px; top: 70px; width: 160px; height: 100px;
+    border-radius: 3px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .slide-content .stat-number { font-size: 36px; font-weight: bold; }
+  .slide-content .stat-label { font-size: 11px; margin-top: 4px; font-family: var(--body-font); }
+
+  /* Metrics grid slide */
+  .slide-data .heading { position: absolute; font-size: 18px; font-weight: bold; left: 28px; top: 24px; font-family: var(--header-font); }
+  .slide-data .grid {
+    position: absolute; left: 28px; top: 56px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    width: calc(100% - 56px);
+  }
+  .slide-data .card { padding: 10px; border-radius: 3px; }
+  .slide-data .card-title { font-size: 12px; font-weight: bold; margin-bottom: 4px; font-family: var(--body-font); }
+  .slide-data .card-value { font-size: 22px; font-weight: bold; font-family: var(--header-font); }
+  .slide-data .card-desc { font-size: 10px; opacity: 0.6; margin-top: 2px; font-family: var(--body-font); }
+
+  /* Comparison slide */
+  .slide-compare .heading { position: absolute; font-size: 18px; font-weight: bold; left: 28px; top: 24px; font-family: var(--header-font); }
+  .slide-compare .columns {
+    position: absolute; left: 28px; top: 60px;
+    display: flex; gap: 12px; width: calc(100% - 56px);
+  }
+  .slide-compare .col { flex: 1; border-radius: 3px; padding: 14px; }
+  .slide-compare .col-header { font-size: 13px; font-weight: bold; margin-bottom: 8px; font-family: var(--header-font); }
+  .slide-compare .col-value { font-size: 28px; font-weight: bold; margin-bottom: 8px; font-family: var(--header-font); }
+  .slide-compare .col-item { font-size: 11px; margin-bottom: 4px; font-family: var(--body-font); }
+
+  /* Stat callout slide */
+  .slide-stats .stats-row {
+    position: absolute; top: 50%; left: 28px; right: 28px;
+    transform: translateY(-50%);
+    display: flex; justify-content: space-around; text-align: center;
+  }
+  .slide-stats .stat { flex: 1; }
+  .slide-stats .stat-big { font-size: 42px; font-weight: bold; font-family: var(--header-font); }
+  .slide-stats .stat-desc { font-size: 12px; margin-top: 8px; font-family: var(--body-font); }
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>{{ title }}</h1>
+  <theme-preview v-for="t in themes" :key="t.name" v-bind="t" />
+</div>
+
+<script>
+const ThemePreview = {
+  props: {
+    name:      String,
+    desc:      String,
+    darkBg:    String,
+    lightBg:   String,
+    darkText:  String,
+    darkBody:  String,
+    darkMuted: String,
+    lightText:  String,
+    lightBody:  String,
+    lightMuted: String,
+    accent:    String,
+    headerFont: { type: String, default: 'Georgia, serif' },
+    bodyFont:   { type: String, default: 'Calibri, system-ui, sans-serif' },
+    fontLabel:  { type: String, default: '' },
+  },
+  computed: {
+    colors() {
+      return [
+        ['Dark', this.darkBg],
+        ['Light', this.lightBg],
+        ['Accent', this.accent],
+        ['Text', this.darkText],
+        ['Body', this.darkBody],
+      ];
+    },
+  },
+  template: `
+    <div class="theme" :style="{ '--header-font': headerFont, '--body-font': bodyFont }">
+      <div class="theme-name">{{ name }}</div>
+      <div v-if="fontLabel" class="theme-font-label">{{ fontLabel }}</div>
+      <div v-if="desc" class="theme-desc">{{ desc }}</div>
+      <div class="theme-colors">
+        <span v-for="[label, hex] in colors" :key="label">
+          <span class="swatch" :style="{ background: hex }"></span>{{ label }}: {{ hex }}
+        </span>
+      </div>
+      <div class="slides">
+
+        <!-- Title slide (dark) -->
+        <div class="slide slide-title" :style="{ background: darkBg }">
+          <div class="title" :style="{ color: darkText }">Quarterly Results</div>
+          <div class="subtitle" :style="{ color: darkBody }">Financial Review — Q1 2026</div>
+          <div class="accent-bar" :style="{ background: accent }"></div>
+          <div class="logo" :style="{ color: darkMuted }">ACME CORP</div>
+          <div class="slide-label" :style="{ color: darkMuted }">title slide</div>
+        </div>
+
+        <!-- Content slide (light) -->
+        <div class="slide slide-content" :style="{ background: lightBg, border: '1px solid rgba(0,0,0,0.08)' }">
+          <div class="accent-strip" :style="{ background: accent }"></div>
+          <div class="heading" :style="{ color: lightText }">Revenue Overview</div>
+          <div class="body-line" :style="{ color: lightBody, top: '60px' }">Annual revenue reached $18.2M,</div>
+          <div class="body-line" :style="{ color: lightBody, top: '78px' }">representing 24% year-over-year growth.</div>
+          <div class="body-line" :style="{ color: lightBody, top: '108px' }">Customer acquisition accelerated in Q3</div>
+          <div class="body-line" :style="{ color: lightBody, top: '126px' }">with 312 new enterprise accounts.</div>
+          <div class="stat-box" :style="{ background: darkBg }">
+            <div class="stat-number" :style="{ color: accent }">$18.2M</div>
+            <div class="stat-label" :style="{ color: darkMuted }">annual revenue</div>
+          </div>
+          <div class="logo" :style="{ color: lightMuted }">ACME CORP</div>
+          <div class="slide-label" :style="{ color: lightMuted }">content slide</div>
+        </div>
+
+        <!-- Metrics grid (dark) -->
+        <div class="slide slide-data" :style="{ background: darkBg }">
+          <div class="heading" :style="{ color: darkText }">Key Metrics</div>
+          <div class="grid">
+            <div v-for="card in cards" :key="card.title" class="card" :style="{ background: lightBg }">
+              <div class="card-title" :style="{ color: lightText }">{{ card.title }}</div>
+              <div class="card-value" :style="{ color: accent }">{{ card.value }}</div>
+              <div class="card-desc" :style="{ color: lightMuted }">{{ card.desc }}</div>
+            </div>
+          </div>
+          <div class="logo" :style="{ color: darkMuted }">ACME CORP</div>
+          <div class="slide-label" :style="{ color: darkMuted }">metrics slide</div>
+        </div>
+
+        <!-- Comparison slide (light) -->
+        <div class="slide slide-compare" :style="{ background: lightBg, border: '1px solid rgba(0,0,0,0.08)' }">
+          <div class="heading" :style="{ color: lightText }">Year over Year</div>
+          <div class="columns">
+            <div class="col" :style="{ background: darkBg }">
+              <div class="col-header" :style="{ color: darkText }">Q1 2025</div>
+              <div class="col-value" :style="{ color: darkBody }">$14.7M</div>
+              <div class="col-item" :style="{ color: darkBody }">Customers: 2,180</div>
+              <div class="col-item" :style="{ color: darkBody }">Margin: 31.4%</div>
+              <div class="col-item" :style="{ color: darkBody }">NPS: 42</div>
+            </div>
+            <div class="col" :style="{ background: darkBg }">
+              <div class="col-header" :style="{ color: darkText }">Q1 2026</div>
+              <div class="col-value" :style="{ color: accent }">$18.2M</div>
+              <div class="col-item" :style="{ color: darkBody }">Customers: 2,847</div>
+              <div class="col-item" :style="{ color: darkBody }">Margin: 34.2%</div>
+              <div class="col-item" :style="{ color: darkBody }">NPS: 58</div>
+            </div>
+          </div>
+          <div class="logo" :style="{ color: lightMuted }">ACME CORP</div>
+          <div class="slide-label" :style="{ color: lightMuted }">comparison slide</div>
+        </div>
+
+        <!-- Stat callout slide (dark) -->
+        <div class="slide slide-stats" :style="{ background: darkBg }">
+          <div class="stats-row">
+            <div class="stat">
+              <div class="stat-big" :style="{ color: accent }">+24%</div>
+              <div class="stat-desc" :style="{ color: darkBody }">Revenue Growth</div>
+            </div>
+            <div class="stat">
+              <div class="stat-big" :style="{ color: darkText }">2,847</div>
+              <div class="stat-desc" :style="{ color: darkBody }">Active Customers</div>
+            </div>
+            <div class="stat">
+              <div class="stat-big" :style="{ color: accent }">34.2%</div>
+              <div class="stat-desc" :style="{ color: darkBody }">Gross Margin</div>
+            </div>
+          </div>
+          <div class="logo" :style="{ color: darkMuted }">ACME CORP</div>
+          <div class="slide-label" :style="{ color: darkMuted }">stat callout slide</div>
+        </div>
+
+      </div>
+    </div>
+  `,
+  data() {
+    return {
+      cards: [
+        { title: 'Revenue',   value: '$18.2M', desc: 'annual, +24% YoY' },
+        { title: 'Customers', value: '2,847',  desc: 'active accounts' },
+        { title: 'Margin',    value: '34.2%',  desc: 'gross margin' },
+        { title: 'NPS',       value: '58',     desc: '+16 vs prior year' },
+      ],
+    };
+  },
+};
+
+const { createApp } = Vue;
+
+createApp({
+  components: { ThemePreview },
+  data() {
+    return {
+      title: 'Business Direction — Palette Previews',
+      themes: [
+        {
+          name: 'Midnight Executive',
+          desc: 'The classic boardroom palette. Serious and formal. Works for any audience that expects gravitas.',
+          darkBg: '#1E2761', lightBg: '#F2F5FA',
+          darkText: '#FFFFFF', darkBody: '#C0CBE0', darkMuted: '#8494B8',
+          lightText: '#1E2761', lightBody: '#4A5270', lightMuted: '#8494B8',
+          accent: '#7896BB',
+        },
+        {
+          name: 'Charcoal Minimal',
+          desc: 'Neutral and recessive. Lets the data do the talking. Good when content is dense and the palette should not compete.',
+          darkBg: '#36454F', lightBg: '#F5F5F5',
+          darkText: '#F0F0F0', darkBody: '#B0BCC4', darkMuted: '#7E8E98',
+          lightText: '#36454F', lightBody: '#5A6A72', lightMuted: '#8E9AA2',
+          accent: '#6E8898',
+        },
+        {
+          name: 'Teal Trust',
+          desc: 'Modern without being informal. Works for SaaS, healthcare, sustainability topics.',
+          darkBg: '#004D5C', lightBg: '#F0F8F7',
+          darkText: '#FFFFFF', darkBody: '#A0C4C8', darkMuted: '#6A9CA2',
+          lightText: '#004D5C', lightBody: '#3A7078', lightMuted: '#6A9CA2',
+          accent: '#5AAE96',
+        },
+        {
+          name: 'Ocean Gradient',
+          desc: 'Monochromatic depth. All blues with enough value contrast for hierarchy. Polished and deliberate.',
+          darkBg: '#0C2340', lightBg: '#F0F4F8',
+          darkText: '#FFFFFF', darkBody: '#9CB0C8', darkMuted: '#6A82A0',
+          lightText: '#0C2340', lightBody: '#3A5068', lightMuted: '#6A82A0',
+          accent: '#2E86C1',
+        },
+        {
+          name: 'Warm Slate',
+          desc: 'A warmer alternative. Approachable without sacrificing professionalism. The copper accent adds warmth.',
+          darkBg: '#4A4A4A', lightBg: '#F5F0EB',
+          darkText: '#F5F0EB', darkBody: '#C4BAB0', darkMuted: '#958C82',
+          lightText: '#4A4A4A', lightBody: '#6B6058', lightMuted: '#958C82',
+          accent: '#C47B5A',
+        },
+      ],
+    };
+  },
+}).mount('#app');
+</script>
+</body>
+</html>

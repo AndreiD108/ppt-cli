@@ -3,7 +3,7 @@
 import json
 import sys
 
-from .helpers import _die, _open, _get_slide, _find_shape, _save, Pt
+from .helpers import _die, _open, _get_slide, _find_shape, _save
 
 
 def cmd_set_text(args):

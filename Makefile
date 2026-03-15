@@ -40,6 +40,7 @@ $(VENV):
 	@echo "Creating venv and installing dependencies..."
 	@python3 -m venv $(VENV)
 	@$(VENV)/bin/pip install --quiet -r requirements.txt
+	@$(VENV)/bin/pip install --quiet -e .
 	@echo "venv ready"
 
 test: $(VENV)
@@ -91,7 +92,7 @@ check:
 		echo "  ✓ GEMINI_API_KEY is set"; \
 	else \
 		echo "  ✗ GEMINI_API_KEY not set"; \
-		echo "    Get one at: https://aistudio.google.com/api-keys"; \
+		echo "    Get one at: https://aistudio.google.com/api-keys or https://console.cloud.google.com/apis/credentials"; \
 		echo "    Then: export GEMINI_API_KEY=\"your-key\""; \
 	fi
 
@@ -106,7 +107,7 @@ help:
 	@echo "Optional dependencies:"
 	@echo "  libreoffice + poppler   For the screenshot command"
 	@echo "  GEMINI_API_KEY          For AI image generation (add-image --prompt, image-gen)"
-	@echo "                          Get one at: https://aistudio.google.com/api-keys"
+	@echo "                          Get one at: https://aistudio.google.com/api-keys or https://console.cloud.google.com/apis/credentials"
 	@echo ""
 	@echo "Run 'make check' to verify your environment."
 ifdef INSTALL_DIR

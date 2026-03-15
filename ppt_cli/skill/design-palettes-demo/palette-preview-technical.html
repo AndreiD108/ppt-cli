@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Technical Palette Preview</title>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a1a; color: #ccc; font-family: system-ui, sans-serif; padding: 40px; }
+  h1 { text-align: center; margin-bottom: 40px; font-size: 24px; color: #eee; }
+
+  .theme { margin-bottom: 60px; }
+  .theme-name { font-size: 20px; font-weight: bold; margin-bottom: 4px; color: #eee; }
+  .theme-font-label { font-size: 13px; margin-bottom: 4px; color: #ddd; font-family: monospace; }
+  .theme-desc { font-size: 13px; margin-bottom: 8px; color: #aaa; }
+  .theme-colors { font-size: 13px; margin-bottom: 16px; color: #999; font-family: monospace; }
+  .theme-colors span { margin-right: 12px; }
+  .swatch {
+    display: inline-block; width: 10px; height: 10px; border-radius: 2px;
+    margin-right: 4px; vertical-align: middle; border: 1px solid rgba(255,255,255,0.15);
+  }
+
+  .slides { display: flex; gap: 24px; overflow-x: auto; padding-bottom: 8px; }
+  .slide {
+    width: 480px; height: 270px; border-radius: 4px;
+    position: relative; overflow: hidden; flex-shrink: 0;
+  }
+  .slide-label {
+    position: absolute; bottom: 8px; right: 12px;
+    font-size: 10px; opacity: 0.5; font-family: monospace;
+  }
+
+  .slide-title .title { position: absolute; font-size: 28px; font-weight: bold; left: 32px; top: 80px; font-family: var(--header-font); }
+  .slide-title .subtitle { position: absolute; font-size: 14px; left: 32px; top: 120px; font-family: var(--body-font); }
+  .slide-title .accent-bar { position: absolute; left: 32px; top: 150px; height: 3px; width: 60px; }
+
+  .slide-content .accent-strip { position: absolute; left: 0; top: 0; width: 4px; height: 100%; }
+  .slide-content .heading { position: absolute; font-size: 18px; font-weight: bold; left: 28px; top: 24px; font-family: var(--header-font); }
+  .slide-content .body-line { position: absolute; font-size: 12px; left: 28px; font-family: var(--body-font); }
+  .slide-content .stat-box {
+    position: absolute; right: 28px; top: 70px; width: 160px; height: 100px;
+    border-radius: 3px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .slide-content .stat-number { font-size: 36px; font-weight: bold; }
+  .slide-content .stat-label { font-size: 11px; margin-top: 4px; font-family: var(--body-font); }
+
+  .slide-data .heading { position: absolute; font-size: 18px; font-weight: bold; left: 28px; top: 24px; font-family: var(--header-font); }
+  .slide-data .grid {
+    position: absolute; left: 28px; top: 56px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    width: calc(100% - 56px);
+  }
+  .slide-data .card { padding: 10px; border-radius: 3px; }
+  .slide-data .card-title { font-size: 12px; font-weight: bold; margin-bottom: 4px; font-family: var(--header-font); }
+  .slide-data .card-value { font-size: 22px; font-weight: bold; font-family: var(--header-font); }
+  .slide-data .card-desc { font-size: 10px; opacity: 0.6; margin-top: 2px; font-family: var(--body-font); }
+
+  /* Architecture diagram slide */
+  .slide-arch .heading { position: absolute; font-size: 18px; font-weight: bold; left: 28px; top: 24px; font-family: var(--header-font); }
+  .slide-arch .node {
+    position: absolute; border-radius: 3px; display: flex;
+    align-items: center; justify-content: center;
+    font-size: 11px; font-weight: bold; font-family: var(--header-font);
+  }
+  .slide-arch .connector {
+    position: absolute; border-radius: 1px;
+  }
+
+  /* Code slide */
+  .slide-code .heading { position: absolute; font-size: 18px; font-weight: bold; left: 28px; top: 24px; font-family: var(--header-font); }
+  .slide-code .code-container {
+    position: absolute; left: 28px; top: 60px;
+    width: calc(100% - 56px); height: 180px;
+    border-radius: 4px; padding: 16px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 11px; line-height: 1.7;
+    overflow: hidden;
+  }
+  .slide-code .code-line-num {
+    display: inline-block; width: 24px; text-align: right;
+    margin-right: 12px; user-select: none;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>{{ title }}</h1>
+  <theme-preview v-for="t in themes" :key="t.name" v-bind="t" />
+</div>
+
+<script>
+const ThemePreview = {
+  props: {
+    name:    String,
+    desc:    String,
+    primary: String,   // main background
+    secondary: String, // cards, containers
+    text:    String,    // headings, large values
+    body:    String,    // body text
+    muted:   String,    // captions, labels (falls back to body if omitted)
+    accent:  String,    // accent color
+    light:   { type: Boolean, default: false }, // true = add border on slides
+    headerFont: { type: String, default: 'Consolas, monospace' },
+    bodyFont:   { type: String, default: 'Calibri, system-ui, sans-serif' },
+    fontLabel:  { type: String, default: '' },
+  },
+  computed: {
+    m() { return this.muted || this.body; },
+    borderStyle() { return this.light ? '1px solid rgba(0,0,0,0.12)' : 'none'; },
+    statBoxBorder() { return this.light ? '1px solid rgba(0,0,0,0.1)' : 'none'; },
+    colors() {
+      const entries = [
+        ['Primary', this.primary],
+        ['Secondary', this.secondary],
+        ['Text', this.text],
+        ['Body', this.body],
+      ];
+      if (this.muted) entries.push(['Muted', this.muted]);
+      entries.push(['Accent', this.accent]);
+      return entries;
+    },
+  },
+  template: `
+    <div class="theme" :style="{ '--header-font': headerFont, '--body-font': bodyFont }">
+      <div class="theme-name">{{ name }}</div>
+      <div v-if="fontLabel" class="theme-font-label">{{ fontLabel }}</div>
+      <div v-if="desc" class="theme-desc">{{ desc }}</div>
+      <div class="theme-colors">
+        <span v-for="[label, hex] in colors" :key="label">
+          <span class="swatch" :style="{ background: hex }"></span>{{ label }}: {{ hex }}
+        </span>
+      </div>
+      <div class="slides">
+
+        <!-- Title slide -->
+        <div class="slide slide-title" :style="{ background: primary, border: borderStyle }">
+          <div class="title" :style="{ color: text }">Architecture Review</div>
+          <div class="subtitle" :style="{ color: m }">Platform Infrastructure — Q1 2026</div>
+          <div class="accent-bar" :style="{ background: accent }"></div>
+          <div class="slide-label" :style="{ color: m }">title slide</div>
+        </div>
+
+        <!-- Content slide -->
+        <div class="slide slide-content" :style="{ background: secondary, border: borderStyle }">
+          <div class="accent-strip" :style="{ background: accent }"></div>
+          <div class="heading" :style="{ color: text }">System Overview</div>
+          <div class="body-line" :style="{ color: body, top: '60px' }">Three services handle authentication,</div>
+          <div class="body-line" :style="{ color: body, top: '78px' }">routing, and data persistence.</div>
+          <div class="body-line" :style="{ color: body, top: '108px' }">Redis caching layer reduces p99</div>
+          <div class="body-line" :style="{ color: body, top: '126px' }">latency from 240ms to 42ms.</div>
+          <div class="stat-box" :style="{ background: primary, border: statBoxBorder }">
+            <div class="stat-number" :style="{ color: accent }">42ms</div>
+            <div class="stat-label" :style="{ color: m }">p99 latency</div>
+          </div>
+          <div class="slide-label" :style="{ color: m }">content slide</div>
+        </div>
+
+        <!-- Data slide -->
+        <div class="slide slide-data" :style="{ background: primary, border: borderStyle }">
+          <div class="heading" :style="{ color: text }">Service Metrics</div>
+          <div class="grid">
+            <div v-for="card in cards" :key="card.title" class="card"
+                 :style="{ background: secondary, border: light ? '1px solid rgba(0,0,0,0.1)' : 'none' }">
+              <div class="card-title" :style="{ color: accent }">{{ card.title }}</div>
+              <div class="card-value" :style="{ color: text }">{{ card.value }}</div>
+              <div class="card-desc" :style="{ color: m }">{{ card.desc }}</div>
+            </div>
+          </div>
+          <div class="slide-label" :style="{ color: m }">data slide</div>
+        </div>
+
+        <!-- Architecture diagram slide -->
+        <div class="slide slide-arch" :style="{ background: primary, border: borderStyle }">
+          <div class="heading" :style="{ color: text }">Request Flow</div>
+          <!-- Nodes -->
+          <div class="node" :style="{ background: secondary, color: text, left: '28px', top: '70px', width: '80px', height: '40px', border: light ? '1px solid rgba(0,0,0,0.1)' : 'none' }">Client</div>
+          <div class="node" :style="{ background: secondary, color: text, left: '160px', top: '70px', width: '80px', height: '40px', border: light ? '1px solid rgba(0,0,0,0.1)' : 'none' }">Gateway</div>
+          <div class="node" :style="{ background: secondary, color: accent, left: '292px', top: '70px', width: '80px', height: '40px', border: '2px solid ' + accent }">Auth</div>
+          <div class="node" :style="{ background: secondary, color: text, left: '292px', top: '150px', width: '80px', height: '40px', border: light ? '1px solid rgba(0,0,0,0.1)' : 'none' }">API</div>
+          <div class="node" :style="{ background: secondary, color: text, left: '160px', top: '150px', width: '80px', height: '40px', border: light ? '1px solid rgba(0,0,0,0.1)' : 'none' }">Cache</div>
+          <div class="node" :style="{ background: secondary, color: text, left: '160px', top: '210px', width: '80px', height: '30px', border: light ? '1px solid rgba(0,0,0,0.1)' : 'none', fontSize: '10px' }">Redis</div>
+          <div class="node" :style="{ background: secondary, color: text, left: '380px', top: '150px', width: '70px', height: '40px', border: light ? '1px solid rgba(0,0,0,0.1)' : 'none' }">DB</div>
+          <!-- Connectors -->
+          <div class="connector" :style="{ background: accent, left: '108px', top: '88px', width: '52px', height: '2px' }"></div>
+          <div class="connector" :style="{ background: accent, left: '240px', top: '88px', width: '52px', height: '2px' }"></div>
+          <div class="connector" :style="{ background: m, left: '331px', top: '110px', width: '2px', height: '40px' }"></div>
+          <div class="connector" :style="{ background: m, left: '240px', top: '168px', width: '52px', height: '2px' }"></div>
+          <div class="connector" :style="{ background: m, left: '199px', top: '190px', width: '2px', height: '20px' }"></div>
+          <div class="connector" :style="{ background: m, left: '372px', top: '168px', width: '16px', height: '2px' }"></div>
+          <div class="slide-label" :style="{ color: m }">diagram slide</div>
+        </div>
+
+        <!-- Code slide -->
+        <div class="slide slide-code" :style="{ background: secondary, border: borderStyle }">
+          <div class="heading" :style="{ color: text }">Configuration</div>
+          <div class="code-container" :style="{ background: primary, border: light ? '1px solid rgba(0,0,0,0.1)' : 'none' }">
+            <div v-for="(line, i) in codeLines" :key="i">
+              <span class="code-line-num" :style="{ color: m }">{{ i + 1 }}</span>
+              <span :style="{ color: line.color === 'accent' ? accent : line.color === 'body' ? body : line.color === 'muted' ? m : text }">{{ line.text }}</span>
+            </div>
+          </div>
+          <div class="slide-label" :style="{ color: m }">code slide</div>
+        </div>
+
+      </div>
+    </div>
+  `,
+  data() {
+    return {
+      cards: [
+        { title: 'Auth Service', value: '99.97%', desc: 'uptime, 90 days' },
+        { title: 'API Gateway',  value: '2.4M',   desc: 'requests/day' },
+        { title: 'Data Layer',   value: '18ms',   desc: 'avg query time' },
+        { title: 'Cache Hit',    value: '94.2%',  desc: 'trailing 30 days' },
+      ],
+      codeLines: [
+        { text: 'service:', color: 'accent' },
+        { text: '  name: auth-gateway', color: 'text' },
+        { text: '  port: 8443', color: 'text' },
+        { text: '  replicas: 3', color: 'text' },
+        { text: '', color: 'text' },
+        { text: '# connection pool settings', color: 'muted' },
+        { text: 'database:', color: 'accent' },
+        { text: '  host: pg-primary.internal', color: 'text' },
+        { text: '  pool_size: 25', color: 'text' },
+        { text: '  timeout: 5000ms', color: 'body' },
+      ],
+    };
+  },
+};
+
+const { createApp } = Vue;
+
+createApp({
+  components: { ThemePreview },
+  data() {
+    return {
+      title: 'Technical Direction — Palette Previews',
+      themes: [
+        // Palette previews (all using Consolas headers + Calibri body)
+        {
+          name: 'Gruvbox',
+          desc: 'Warm, developer-native, cozy. Proves that technical doesn\'t have to mean cold.',
+          primary: '#282828', secondary: '#3C3836',
+          text: '#EBDBB2', body: '#A89984', muted: '#928374', accent: '#D65D0E',
+        },
+        {
+          name: 'JetBrains Light',
+          desc: 'Clean, bright, professional. A light theme that still reads as technical.',
+          primary: '#FFFFFF', secondary: '#F7F8FA',
+          text: '#2B2B2B', body: '#555555', muted: '#656565', accent: '#3574F0',
+          light: true,
+        },
+        {
+          name: 'Solarized Light',
+          desc: 'The warm variant. Cream backgrounds, good for bright rooms and print.',
+          primary: '#FDF6E3', secondary: '#EEE8D5',
+          text: '#073642', body: '#586E75', muted: '#6B7B80', accent: '#B8863A',
+          light: true,
+        },
+        {
+          name: 'Darcula',
+          desc: 'The JetBrains dark theme. Familiar to any Java/Kotlin/Python developer.',
+          primary: '#2B2B2B', secondary: '#3C3F41',
+          text: '#A9B7C6', body: '#9A9A9A', muted: '#6A737D', accent: '#CC7832',
+        },
+        {
+          name: 'Solarized Dark',
+          desc: 'Ethan Schoonover\'s classic. Muted, high-contrast, distinctive teal-cyan base.',
+          primary: '#002B36', secondary: '#073642',
+          text: '#93A1A1', body: '#7E919A', muted: '#586E75', accent: '#B58900',
+        },
+        {
+          name: 'GitHub Dark',
+          desc: 'The GitHub code view. Clean, modern, universally recognizable.',
+          primary: '#0D1117', secondary: '#161B22',
+          text: '#C9D1D9', body: '#8B949E', muted: '#6D7681', accent: '#58A6FF',
+        },
+      ],
+    };
+  },
+}).mount('#app');
+</script>
+</body>
+</html>

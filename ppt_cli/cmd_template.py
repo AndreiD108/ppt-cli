@@ -3,7 +3,6 @@
 import json
 import os
 import shutil
-import sys
 
 from .helpers import _die, Presentation
 from .template_registry import (

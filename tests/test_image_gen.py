@@ -9,7 +9,9 @@ PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def _cli_no_api_key(tmp_path):
     """Return a CLI runner with GEMINI_API_KEY explicitly removed."""
-    env = {**os.environ, "PYTHONPATH": PROJECT_DIR}
+    from conftest import _setup_install_json
+    env = {**os.environ, "PYTHONPATH": PROJECT_DIR,
+           "PPT_CLI_INSTALL_JSON": _setup_install_json(tmp_path)}
     env.pop("GEMINI_API_KEY", None)
 
     def run(*args):
@@ -62,3 +64,24 @@ def test_image_gen_count_negative(cli):
     rc, out, err = cli("image-gen", "a cat", "--count", "-1")
     assert rc != 0
     assert "count" in err.lower()
+
+
+def test_image_gen_ref_too_many(cli, tmp_path):
+    """Error when more than 14 reference images are passed."""
+    # Create 15 tiny files
+    paths = []
+    for i in range(15):
+        p = str(tmp_path / f"img{i}.png")
+        with open(p, "wb") as f:
+            f.write(b"\x89PNG\r\n\x1a\n")
+        paths.append(p)
+    rc, out, err = cli("image-gen", "a cat", "--ref", *paths)
+    assert rc != 0
+    assert "14" in err
+
+
+def test_image_gen_ref_file_not_found(cli):
+    """Error when a reference image does not exist."""
+    rc, out, err = cli("image-gen", "a cat", "--ref", "/nonexistent/img.png")
+    assert rc != 0
+    assert "not found" in err.lower()

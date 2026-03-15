@@ -11,9 +11,6 @@ from .image_gen import SUPPORTED_RATIOS, generate_image, generate_image_name
 
 
 def cmd_image_gen(args):
-    if not os.environ.get("GEMINI_API_KEY"):
-        _die("GEMINI_API_KEY not set. Get one at https://aistudio.google.com/api-keys")
-
     if args.ratio and args.ratio not in SUPPORTED_RATIOS:
         _die(f"unsupported aspect ratio: {args.ratio!r}. "
              f"Supported: {', '.join(sorted(SUPPORTED_RATIOS))}")
@@ -23,6 +20,17 @@ def cmd_image_gen(args):
 
     if args.count < 1:
         _die(f"--count must be >= 1, got {args.count}")
+
+    # Validate --ref
+    ref_images = getattr(args, "ref", None) or []
+    if len(ref_images) > 14:
+        _die(f"--ref accepts at most 14 images, got {len(ref_images)}")
+    for img_path in ref_images:
+        if not os.path.isfile(img_path):
+            _die(f"reference image not found: {img_path}")
+
+    if not os.environ.get("GEMINI_API_KEY"):
+        _die("GEMINI_API_KEY not set. Get one at https://aistudio.google.com/api-keys or https://console.cloud.google.com/apis/credentials")
 
     # Generate a name for the files
     try:
@@ -41,6 +49,7 @@ def cmd_image_gen(args):
             aspect_ratio=args.ratio,
             grounding=args.grounding,
             reasoning=args.reasoning,
+            ref_images=ref_images or None,
         )
 
     results = []

@@ -10,13 +10,23 @@ readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
 keywords = ["powerpoint", "pptx", "ppt", "cli", "slides", "presentation", "agent", "tool", "skill"]
-dependencies = ["python-pptx", "google-genai"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Environment :: Console",
+]
+dependencies = ["python-pptx", "google-genai", "Pillow"]
 
 [project.scripts]
 ppt-cli = "ppt_cli.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/AndreiD108/ppt-cli"
+
+[tool.setuptools.packages.find]
+include = ["ppt_cli*"]
+
+[tool.setuptools.package-data]
+ppt_cli = ["skill/**"]
 
 [tool.setuptools.dynamic]
 version = {attr = "ppt_cli.__version__"}

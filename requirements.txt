@@ -1,3 +1,4 @@
 python-pptx
 google-genai
+Pillow
 pytest

@@ -6,7 +6,6 @@ import json
 import os
 import shutil
 import subprocess
-import sys
 import tempfile
 
 from .helpers import _die, _open, _get_slide, Presentation

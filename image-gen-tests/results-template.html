@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image Gen Benchmark — Run {{RUN}}</title>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0a; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  #app { max-width: 2400px; margin: 0 auto; padding: 24px 32px; }
+  h1 { font-size: 24px; font-weight: 600; margin-bottom: 4px; color: #fff; }
+  .subtitle { font-size: 14px; color: #888; margin-bottom: 32px; }
+  .subtitle span { color: #666; }
+  .section { margin-bottom: 48px; }
+  .section-header { font-size: 18px; font-weight: 600; color: #ccc; margin-bottom: 4px; }
+  .section-desc { font-size: 13px; color: #666; margin-bottom: 16px; }
+  .comparison-row { display: flex; gap: 24px; margin-bottom: 12px; }
+  .side { flex: 1; }
+  .side-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; padding: 4px 10px; display: inline-block; border-radius: 3px; }
+  .side-label.guided { background: #1a3a2a; color: #4ade80; }
+  .side-label.unguided { background: #3a2a1a; color: #fbbf24; }
+  .side-label.ref { background: #2a2a3a; color: #a78bfa; }
+  .image-row { display: flex; gap: 8px; }
+  .image-row img { flex: 1; min-width: 0; border-radius: 4px; cursor: pointer; transition: opacity 0.15s; border: 1px solid #222; }
+  .image-row img:hover { opacity: 0.85; }
+  .image-row.icons img { max-width: 180px; flex: 0 0 auto; }
+  .icon-group { margin-bottom: 16px; }
+  .icon-group-label { font-size: 12px; color: #555; margin-bottom: 6px; }
+  hr { border: none; border-top: 1px solid #1a1a1a; margin: 32px 0; }
+
+  /* Reference image column */
+  .ref-col { flex: 0 0 200px; }
+  .ref-col img { width: 100%; border-radius: 4px; border: 1px solid #333; margin-bottom: 4px; }
+
+  /* Carousel lightbox */
+  .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.94); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .lightbox-close { position: absolute; top: 16px; right: 24px; font-size: 28px; color: #666; cursor: pointer; z-index: 101; line-height: 1; }
+  .lightbox-close:hover { color: #ccc; }
+  .lightbox-badge { position: absolute; top: 20px; left: 24px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; padding: 4px 10px; border-radius: 3px; }
+  .lightbox-badge.guided { background: #1a3a2a; color: #4ade80; }
+  .lightbox-badge.unguided { background: #3a2a1a; color: #fbbf24; }
+  .lightbox-counter { position: absolute; top: 22px; left: 50%; transform: translateX(-50%); font-size: 12px; color: #555; }
+  .lightbox-main { display: flex; align-items: center; gap: 16px; max-width: 90vw; }
+  .lightbox-nav { font-size: 36px; color: #444; cursor: pointer; user-select: none; padding: 12px; flex-shrink: 0; }
+  .lightbox-nav:hover { color: #aaa; }
+  .lightbox-img { max-width: 70vw; max-height: 65vh; border-radius: 6px; }
+  .lightbox-prompt { max-width: 70vw; margin-top: 16px; background: #111; border: 1px solid #1a1a1a; border-radius: 4px; padding: 12px 16px; font-size: 13px; line-height: 1.7; color: #999; font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; white-space: pre-wrap; word-break: break-word; max-height: 20vh; overflow-y: auto; }
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>Image Generation Benchmark — Run {{RUN}}</h1>
+  <p class="subtitle">
+    Skill file: <span>2-image-generation.md</span> &middot;
+    Resolution: <span>1k</span> &middot;
+    Images: <span>3 unique prompts per type</span> &middot;
+    Date: <span>{{DATE}}</span> &middot;
+    Scenario: <span>EDIT: short scenario name</span>
+  </p>
+
+  <div v-for="section in sections" :key="section.id" class="section">
+    <div class="section-header">{{ section.title }}</div>
+    <div class="section-desc">{{ section.desc }}</div>
+
+    <template v-if="!section.iconGroups">
+      <div class="comparison-row">
+        <!-- Reference image column (ref types only) -->
+        <div v-if="section.ref || section.refs" class="ref-col">
+          <div class="side-label ref">Reference</div>
+          <img v-if="section.ref" :src="section.ref" loading="lazy">
+          <template v-if="section.refs">
+            <img v-for="r in section.refs" :key="r" :src="r" loading="lazy">
+          </template>
+        </div>
+        <div class="side">
+          <div class="side-label guided">Guided</div>
+          <div class="image-row">
+            <img v-for="i in 3" :key="'g'+i"
+              :src="'guided/' + section.prefix + '_' + i + '.png'"
+              @click="openLightbox(section.id, 'guided', i-1)" loading="lazy">
+          </div>
+        </div>
+        <div class="side">
+          <div class="side-label unguided">Unguided</div>
+          <div class="image-row">
+            <img v-for="i in 3" :key="'u'+i"
+              :src="'unguided/' + section.prefix + '_' + i + '.png'"
+              @click="openLightbox(section.id, 'unguided', i-1)" loading="lazy">
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template v-else>
+      <div v-for="(group, gi) in section.iconGroups" :key="group.label" class="icon-group">
+        <div class="icon-group-label">{{ group.label }}</div>
+        <div class="comparison-row">
+          <div class="side">
+            <div v-if="gi === 0" class="side-label guided">Guided</div>
+            <div class="image-row icons">
+              <img v-for="i in 3" :key="'g'+i"
+                :src="'guided/' + group.prefix + '_' + i + '.png'"
+                @click="openLightbox(group.prefix, 'guided', i-1)" loading="lazy">
+            </div>
+          </div>
+          <div class="side">
+            <div v-if="gi === 0" class="side-label unguided">Unguided</div>
+            <div class="image-row icons">
+              <img v-for="i in 3" :key="'u'+i"
+                :src="'unguided/' + group.prefix + '_' + i + '.png'"
+                @click="openLightbox(group.prefix, 'unguided', i-1)" loading="lazy">
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+    <hr>
+  </div>
+
+  <!-- Carousel Lightbox -->
+  <div v-if="lb.open" class="lightbox" @click.self="closeLightbox">
+    <div class="lightbox-close" @click="closeLightbox">&times;</div>
+    <div class="lightbox-badge" :class="lb.side">{{ lb.side }}</div>
+    <div class="lightbox-counter">{{ lb.idx + 1 }} / {{ lbImages.length }}</div>
+    <div class="lightbox-main">
+      <div class="lightbox-nav" @click="lbPrev">&#8249;</div>
+      <img class="lightbox-img" :src="lbImages[lb.idx]">
+      <div class="lightbox-nav" @click="lbNext">&#8250;</div>
+    </div>
+    <div class="lightbox-prompt">{{ lbPrompt }}</div>
+  </div>
+</div>
+
+<script>
+const { createApp } = Vue
+createApp({
+  data() {
+    return {
+      lb: { open: false, key: '', side: '', idx: 0 },
+      sections: [
+        /*
+         * ── GENERATION TYPES (01–16) ──────────────────────────────────
+         * EDIT: Update each desc to match your presentation scenario.
+         * EDIT: Update icon group labels and prefixes for types 13–16.
+         */
+        { id: 'fullbleed', title: '01 — Full-Bleed Background', desc: 'EDIT: Opening title slide background. 16:9, fills entire slide.', prefix: '01-fullbleed' },
+        { id: 'halfbleed', title: '02 — Half-Bleed Image', desc: 'EDIT: Left half of slide. 3:4 ratio. Close-up subject.', prefix: '02-halfbleed' },
+        { id: 'concept', title: '03 — Concept / Metaphor Illustration', desc: 'EDIT: Visual metaphor for a key theme. Concrete scene, not abstract.', prefix: '03-concept' },
+        { id: 'icon', title: '04 — Icon / Spot Illustration', desc: 'EDIT: Small icon for infographic slide. 1:1 ratio, clean and simple.', prefix: '04-icon' },
+        { id: 'chart', title: '05 — Chart / Data Visualization', desc: 'EDIT: Bar chart with specific data. Dark background, polished design.', prefix: '05-chart' },
+        { id: 'text', title: '06 — Text-in-Image', desc: 'EDIT: Section divider with a word rendered into a dramatic background.', prefix: '06-text-in-image' },
+        { id: 'manga', title: '07 — Genre: Manga / Anime', desc: 'EDIT: Core subject rendered as manga. Exaggerated energy, speed lines.', prefix: '07-manga' },
+        { id: 'comic', title: '08 — Genre: Comic Book', desc: 'EDIT: Same subject as Western comic. Bold lines, dramatic angles.', prefix: '08-comic' },
+        { id: 'retro', title: '09 — Genre: Retro / Vintage Poster', desc: 'EDIT: Vintage propaganda/travel poster style. Bold, graphic, nostalgic.', prefix: '09-retro' },
+        { id: 'editorial', title: '10 — Genre: Editorial / Cinematic', desc: 'EDIT: Magazine-quality editorial photography. Cinematic lighting, shallow DOF.', prefix: '10-editorial' },
+        { id: 'flatvector', title: '11 — Genre: Flat Vector / Diagrammatic', desc: 'EDIT: Clean flat vector illustration. Minimal palette, simplified shapes.', prefix: '11-flatvector' },
+        { id: 'people', title: '12 — People / Teams', desc: 'EDIT: Team portrait in their environment. 3:4 ratio.', prefix: '12-people' },
+        {
+          id: 'iconset', title: '13–16 — Consistent Asset Family', desc: 'EDIT: Four matching icons. Key test: do they look like the same visual family?',
+          iconGroups: [
+            /* EDIT: Update labels and prefix suffixes to match scenario */
+            { label: 'EDIT: Benefit 1', prefix: '13-icon-a' },
+            { label: 'EDIT: Benefit 2', prefix: '14-icon-b' },
+            { label: 'EDIT: Benefit 3', prefix: '15-icon-c' },
+            { label: 'EDIT: Benefit 4', prefix: '16-icon-d' },
+          ]
+        },
+
+        /*
+         * ── REFERENCE IMAGE TYPES (17–24) ─────────────────────────────
+         * These use stock images from ../stock/ as --ref input.
+         * The ref/refs fields show the source image alongside outputs.
+         * EDIT: Update desc fields to fit your scenario's palette/mood.
+         */
+        { id: 'duotone', title: '17 — Cohesion: Duotone', desc: 'Process source photo into deck-palette duotone. Strip original colors, remap to two theme colors.', prefix: '17-duotone', ref: '../stock/photo-event.png' },
+        { id: 'colorgrade', title: '18 — Cohesion: Color Grading', desc: 'Apply cinematic color grading to match the deck mood and palette.', prefix: '18-colorgrade', ref: '../stock/photo-office.png' },
+        { id: 'styleadapt', title: '19 — Cohesion: Style Adaptation', desc: 'Transform photo into a different visual genre matching the deck aesthetic.', prefix: '19-styleadapt', ref: '../stock/photo-street.png' },
+        { id: 'bgreplace', title: '20 — Background Replacement', desc: 'Replace busy background with clean deck-appropriate backdrop.', prefix: '20-bgreplace', ref: '../stock/portrait.png' },
+        { id: 'bgremove', title: '21 — Background Removal', desc: 'Remove cluttered background, isolate subject on clean surface.', prefix: '21-bgremove', ref: '../stock/product.png' },
+        { id: 'character', title: '22 — Character Consistency', desc: 'Same person in 3 different scenes. Must be recognizably the same individual.', prefix: '22-character', ref: '../stock/portrait.png' },
+        { id: 'stylematch', title: '23 — Style Matching', desc: 'New subjects in the visual language of the style reference.', prefix: '23-stylematch', ref: '../stock/style-ref.png' },
+        { id: 'multiref', title: '24 — Multi-Reference', desc: 'Character from portrait rendered in style reference aesthetic.', prefix: '24-multiref', refs: ['../stock/portrait.png', '../stock/style-ref.png'] },
+      ],
+      prompts: null
+    }
+  },
+  computed: {
+    lbImages() {
+      if (!this.lb.open) return []
+      const prefix = this.getPrefix(this.lb.key)
+      return [1,2,3].map(i => `${this.lb.side}/${prefix}_${i}.png`)
+    },
+    lbPrompt() {
+      if (!this.lb.open || !this.prompts) return ''
+      const prefix = this.getPrefix(this.lb.key)
+      const p = this.prompts[prefix] || this.prompts[this.lb.key]
+      if (!p) return '(prompt not recorded)'
+      const arr = p[this.lb.side]
+      if (!arr) return '(prompt not recorded)'
+      return arr[this.lb.idx] || '(prompt not recorded)'
+    }
+  },
+  methods: {
+    getPrefix(key) {
+      for (const s of this.sections) {
+        if (s.id === key) return s.prefix
+        if (s.iconGroups) {
+          for (const g of s.iconGroups) {
+            if (g.prefix === key) return g.prefix
+          }
+        }
+      }
+      return key
+    },
+    openLightbox(key, side, idx) {
+      this.lb = { open: true, key, side, idx }
+    },
+    closeLightbox() { this.lb.open = false },
+    lbPrev() { this.lb.idx = (this.lb.idx - 1 + 3) % 3 },
+    lbNext() { this.lb.idx = (this.lb.idx + 1) % 3 },
+    handleKey(e) {
+      if (!this.lb.open) return
+      if (e.key === 'ArrowLeft') this.lbPrev()
+      else if (e.key === 'ArrowRight') this.lbNext()
+      else if (e.key === 'Escape') this.closeLightbox()
+    }
+  },
+  mounted() {
+    window.addEventListener('keydown', this.handleKey)
+    fetch('prompts.json').then(r => r.ok ? r.json() : {}).then(d => { this.prompts = d })
+  },
+  beforeUnmount() { window.removeEventListener('keydown', this.handleKey) }
+}).mount('#app')
+</script>
+</body>
+</html>

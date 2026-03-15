@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Creative Palette Preview</title>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a1a; color: #ccc; font-family: system-ui, sans-serif; padding: 40px; }
+  h1 { text-align: center; margin-bottom: 40px; font-size: 24px; color: #eee; }
+
+  .theme { margin-bottom: 60px; }
+  .theme-name { font-size: 20px; font-weight: bold; margin-bottom: 4px; color: #eee; }
+  .theme-font-label { font-size: 13px; margin-bottom: 4px; color: #ddd; font-family: monospace; }
+  .theme-desc { font-size: 13px; margin-bottom: 8px; color: #aaa; }
+  .theme-colors { font-size: 13px; margin-bottom: 16px; color: #999; font-family: monospace; }
+  .theme-colors span { margin-right: 12px; }
+  .swatch {
+    display: inline-block; width: 10px; height: 10px; border-radius: 2px;
+    margin-right: 4px; vertical-align: middle; border: 1px solid rgba(255,255,255,0.15);
+  }
+
+  .slides { display: flex; gap: 24px; overflow-x: auto; padding-bottom: 8px; }
+  .slide {
+    width: 480px; height: 270px; border-radius: 4px;
+    position: relative; overflow: hidden; flex-shrink: 0;
+  }
+  .slide-label {
+    position: absolute; bottom: 8px; right: 12px;
+    font-size: 10px; opacity: 0.5; font-family: monospace;
+  }
+
+  /* Title slide — dramatic, minimal */
+  .slide-title .title {
+    position: absolute; font-weight: bold; font-family: var(--header-font);
+    font-size: 38px; left: 36px; top: 90px;
+  }
+  .slide-title .subtitle {
+    position: absolute; font-size: 14px; left: 36px; top: 140px;
+    font-family: var(--body-font);
+  }
+  .slide-title .accent-block {
+    position: absolute; left: 0; top: 0; width: 8px; height: 100%;
+  }
+
+  /* Quote slide — single italic statement */
+  .slide-quote .quote-text {
+    position: absolute; font-size: 22px; font-style: italic;
+    font-family: var(--header-font);
+    left: 48px; right: 48px; top: 80px; line-height: 1.5;
+  }
+  .slide-quote .attribution {
+    position: absolute; font-size: 12px; left: 48px; bottom: 48px;
+    font-family: var(--body-font); letter-spacing: 1px;
+  }
+
+  /* Half-bleed — image on right, text on left */
+  .slide-halfbleed .image-area {
+    position: absolute; right: 0; top: 0; width: 50%; height: 100%;
+    overflow: hidden;
+  }
+  .slide-halfbleed .image-area img {
+    width: 100%; height: 100%; object-fit: cover;
+    filter: grayscale(1) contrast(1.1);
+    mix-blend-mode: luminosity;
+  }
+  .slide-halfbleed .image-area .color-overlay {
+    position: absolute; inset: 0;
+    mix-blend-mode: multiply;
+    opacity: 0.85;
+  }
+  .slide-halfbleed .heading {
+    position: absolute; font-size: 22px; font-weight: bold;
+    left: 36px; top: 48px; font-family: var(--header-font);
+  }
+  .slide-halfbleed .body-line {
+    position: absolute; font-size: 12px; left: 36px;
+    font-family: var(--body-font); max-width: 42%;
+  }
+
+  /* Stat callout — oversized number */
+  .slide-stat .number {
+    position: absolute; font-size: 72px; font-weight: bold;
+    font-family: var(--header-font);
+    left: 48px; top: 70px;
+  }
+  .slide-stat .label {
+    position: absolute; font-size: 14px;
+    font-family: var(--body-font);
+    left: 48px; top: 160px;
+  }
+  .slide-stat .accent-bar {
+    position: absolute; left: 48px; top: 190px; height: 3px; width: 60px;
+  }
+
+  /* Section divider — bold word */
+  .slide-divider .big-word {
+    position: absolute; font-size: 52px; font-weight: bold;
+    font-family: var(--header-font);
+    left: 36px; top: 88px; letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+  .slide-divider .sub-line {
+    position: absolute; font-size: 13px;
+    font-family: var(--body-font);
+    left: 36px; top: 155px;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>{{ title }}</h1>
+  <theme-preview v-for="t in themes" :key="t.name" v-bind="t" />
+</div>
+
+<script>
+const ThemePreview = {
+  props: {
+    name:    String,
+    desc:    String,
+    primary: String,
+    secondary: String,
+    text:    String,
+    body:    String,
+    muted:   String,
+    accent:  String,
+    headerFont: { type: String, default: 'Georgia, serif' },
+    bodyFont:   { type: String, default: 'Calibri, system-ui, sans-serif' },
+    fontLabel:  { type: String, default: '' },
+  },
+  computed: {
+    m() { return this.muted || this.body; },
+    colors() {
+      const entries = [
+        ['Primary', this.primary],
+        ['Secondary', this.secondary],
+        ['Text', this.text],
+        ['Body', this.body],
+      ];
+      if (this.muted) entries.push(['Muted', this.muted]);
+      entries.push(['Accent', this.accent]);
+      return entries;
+    },
+  },
+  template: `
+    <div class="theme" :style="{ '--header-font': headerFont, '--body-font': bodyFont }">
+      <div class="theme-name">{{ name }}</div>
+      <div v-if="fontLabel" class="theme-font-label">{{ fontLabel }}</div>
+      <div v-if="desc" class="theme-desc">{{ desc }}</div>
+      <div class="theme-colors">
+        <span v-for="[label, hex] in colors" :key="label">
+          <span class="swatch" :style="{ background: hex }"></span>{{ label }}: {{ hex }}
+        </span>
+      </div>
+      <div class="slides">
+
+        <!-- Title slide -->
+        <div class="slide slide-title" :style="{ background: primary }">
+          <div class="accent-block" :style="{ background: accent }"></div>
+          <div class="title" :style="{ color: text }">The Future of</div>
+          <div class="subtitle" :style="{ color: body }">Design & Innovation Summit 2026</div>
+          <div class="slide-label" :style="{ color: m }">title slide</div>
+        </div>
+
+        <!-- Quote slide -->
+        <div class="slide slide-quote" :style="{ background: secondary }">
+          <div class="quote-mark" :style="{ color: accent, position: 'absolute', left: '36px', top: '50px', fontSize: '48px', fontFamily: 'var(--header-font)', fontWeight: 'bold', lineHeight: 1 }">"</div>
+          <div class="quote-text" :style="{ color: text }">Design is not just what it looks like. Design is how it works.</div>
+          <div class="attribution" :style="{ color: accent }">— STEVE JOBS</div>
+          <div class="slide-label" :style="{ color: m }">quote slide</div>
+        </div>
+
+        <!-- Half-bleed -->
+        <div class="slide slide-halfbleed" :style="{ background: primary }">
+          <div class="image-area" :style="{ background: accent }">
+            <img src="https://picsum.photos/seed/creative/480/540" alt="">
+            <div class="color-overlay" :style="{ background: accent }"></div>
+          </div>
+          <div class="heading" :style="{ color: accent }">Bold Vision</div>
+          <div class="body-line" :style="{ color: body, top: '90px' }">Every breakthrough begins with</div>
+          <div class="body-line" :style="{ color: body, top: '108px' }">a willingness to see differently.</div>
+          <div class="body-line" :style="{ color: body, top: '138px' }">We challenge the expected.</div>
+          <div class="slide-label" :style="{ color: m }">half-bleed slide</div>
+        </div>
+
+        <!-- Stat callout -->
+        <div class="slide slide-stat" :style="{ background: primary }">
+          <div class="number" :style="{ color: accent }">93%</div>
+          <div class="label" :style="{ color: body }">of users said it changed how they work</div>
+          <div class="accent-bar" :style="{ background: accent }"></div>
+          <div class="slide-label" :style="{ color: m }">stat callout</div>
+        </div>
+
+        <!-- Section divider -->
+        <div class="slide slide-divider" :style="{ background: accent }">
+          <div class="big-word" :style="{ color: primary }">Impact</div>
+          <div class="sub-line" :style="{ color: primary, opacity: 0.6 }">What we built and what it means</div>
+          <div class="slide-label" :style="{ color: primary, opacity: 0.4 }">section divider</div>
+        </div>
+
+      </div>
+    </div>
+  `,
+};
+
+const { createApp } = Vue;
+
+createApp({
+  components: { ThemePreview },
+  data() {
+    return {
+      title: 'Creative Direction — Palette Previews',
+      themes: [
+        {
+          name: 'Midnight & Coral',
+          desc: 'Dramatic, modern, confident. Dark navy base with a vivid coral accent that demands attention.',
+          primary: '#1A1A2E', secondary: '#16213E',
+          text: '#FFFFFF', body: '#A8A8C0', muted: '#6A6A85', accent: '#E94560',
+          headerFont: 'Impact, sans-serif',
+          bodyFont: 'Arial, sans-serif',
+          fontLabel: 'Impact + Arial',
+        },
+        {
+          name: 'Warm Earth',
+          desc: 'Grounded, organic, intentional. Terracotta and salmon with a forest green accent — earthy warmth with natural contrast.',
+          primary: '#B85042', secondary: '#C66A5B',
+          text: '#FFFFFF', body: '#F0D4CC', muted: '#DCA698', accent: '#2F5B29',
+          headerFont: 'Georgia, serif',
+          bodyFont: 'Calibri, system-ui, sans-serif',
+          fontLabel: 'Georgia + Calibri',
+        },
+        {
+          name: 'Monochrome Punch',
+          desc: 'Stark, high-contrast, unmistakable. Near-black with electric yellow. Nothing hides.',
+          primary: '#121212', secondary: '#2D2D2D',
+          text: '#FFFFFF', body: '#A0A0A0', muted: '#6B6B6B', accent: '#FFD600',
+          headerFont: 'Impact, sans-serif',
+          bodyFont: 'Arial, sans-serif',
+          fontLabel: 'Impact + Arial',
+        },
+        {
+          name: 'Berry Editorial',
+          desc: 'Rich, editorial, textured. Deep berry with warm gold accents — luxury magazine aesthetic.',
+          primary: '#6D2E46', secondary: '#5A2538',
+          text: '#ECE2D0', body: '#D4C0B0', muted: '#9A7A6A', accent: '#C9985A',
+          headerFont: 'Palatino, Palatino Linotype, serif',
+          bodyFont: 'Garamond, Georgia, serif',
+          fontLabel: 'Palatino + Garamond',
+        },
+      ],
+    };
+  },
+}).mount('#app');
+</script>
+</body>
+</html>

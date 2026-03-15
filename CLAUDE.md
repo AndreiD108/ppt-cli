@@ -18,6 +18,8 @@ ppt-cli internals build <dir> out.pptx  # rebuild from staged directory
 
 ppt-cli template save corp deck.pptx    # save as named template
 ppt-cli create new.pptx --template corp # create from template
+
+ppt-cli setup                           # (re-)install the agent skill
 ```
 
 Run `ppt-cli --help` for the full command list.
@@ -43,7 +45,7 @@ ppt-cli/
 │   ├── cli.py               # argparse setup, imports all cmd_* functions
 │   ├── helpers.py           # _die, _parse_length, _parse_color, _open, _get_slide,
 │   │                        #   _find_shape, _save + re-exports: Presentation, Inches,
-│   │                        #   Pt, Emu, RGBColor, PP_ALIGN
+│   │                        #   Pt, Emu, RGBColor
 │   ├── serialisation.py     # _emu_to_in, _shape_type_str, _text_frame_to_list,
 │   │                        #   _table_to_list, _shape_to_dict, _dump_slide, _peek_slide
 │   ├── cmd_create.py        # cmd_create
@@ -60,7 +62,9 @@ ppt-cli/
 │   ├── staging.py           # staging dir management (hash, extract, resolve)
 │   ├── ooxml.py             # low-level OOXML: XML parse/write, .rels CRUD,
 │   │                        #   Content_Types CRUD, build, validate, prune
-│   └── template_registry.py # platform-specific template dir, registry.json CRUD
+│   ├── template_registry.py # platform-specific template dir, registry.json CRUD
+│   └── setup.py             # first-run setup, install.json CRUD, skill hash,
+│                            #   _check_setup (pre-command hook), cmd_setup
 ├── tests/
 │   ├── conftest.py          # cli(), tmp_pptx, deck_with_slide, staged_deck,
 │   │                        #   cli_with_template_dir
@@ -73,9 +77,10 @@ ppt-cli/
 │   ├── test_style.py
 │   ├── test_internals_stage.py
 │   ├── test_internals_mutate.py
-│   └── test_template.py
+│   ├── test_template.py
+│   └── test_setup.py
 ├── Makefile
-└── requirements.txt         # python-pptx, google-genai, pytest
+└── requirements.txt         # python-pptx, google-genai, Pillow, pytest
 ```
 
 ## Architecture rules
@@ -114,3 +119,4 @@ ppt-cli/
 - Colors are `#RRGGBB` or `RRGGBB`.
 - Hidden slides are flagged in `info`, `list`, `dump`, and `peek` output.
 - `screenshot` requires LibreOffice; cached PDFs and PNGs go to `/tmp/ppt-cli-screenshots/`.
+- **Skill updates require a version bump.** When changing files in `ppt_cli/skill/`, bump `__version__` in `__init__.py`. The first-run system uses version-gating: if the version matches `install.json`, the skill hash is never checked. A version bump triggers the hash comparison, and if SKILL.md changed, a silent auto-update pushes the new skill to installed agents.

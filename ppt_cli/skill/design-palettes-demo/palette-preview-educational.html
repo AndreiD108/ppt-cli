@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Educational Palette Preview</title>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a1a; color: #ccc; font-family: system-ui, sans-serif; padding: 40px; }
+  h1 { text-align: center; margin-bottom: 40px; font-size: 24px; color: #eee; }
+
+  .theme { margin-bottom: 60px; }
+  .theme-name { font-size: 20px; font-weight: bold; margin-bottom: 4px; color: #eee; }
+  .theme-font-label { font-size: 13px; margin-bottom: 4px; color: #ddd; font-family: monospace; }
+  .theme-desc { font-size: 13px; margin-bottom: 8px; color: #aaa; }
+  .theme-colors { font-size: 13px; margin-bottom: 16px; color: #999; font-family: monospace; }
+  .theme-colors span { margin-right: 12px; }
+  .swatch {
+    display: inline-block; width: 10px; height: 10px; border-radius: 2px;
+    margin-right: 4px; vertical-align: middle; border: 1px solid rgba(255,255,255,0.15);
+  }
+
+  .slides { display: flex; gap: 24px; overflow-x: auto; padding-bottom: 8px; }
+  .slide {
+    width: 480px; height: 270px; border-radius: 4px;
+    position: relative; overflow: hidden; flex-shrink: 0;
+  }
+  .slide-label {
+    position: absolute; bottom: 8px; right: 12px;
+    font-size: 10px; opacity: 0.5; font-family: monospace;
+  }
+
+  /* Title slide */
+  .slide-title .title {
+    position: absolute; font-size: 28px; font-weight: bold;
+    font-family: var(--header-font); left: 36px; top: 80px;
+  }
+  .slide-title .subtitle {
+    position: absolute; font-size: 14px; left: 36px; top: 118px;
+    font-family: var(--body-font);
+  }
+  .slide-title .progress-dots {
+    position: absolute; bottom: 24px; right: 24px;
+    display: flex; gap: 6px;
+  }
+  .slide-title .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+  }
+
+  /* Icon + text rows (workhorse) */
+  .slide-icons .heading {
+    position: absolute; font-size: 18px; font-weight: bold;
+    left: 28px; top: 24px; font-family: var(--header-font);
+  }
+  .slide-icons .row {
+    position: absolute; left: 28px; display: flex; align-items: flex-start; gap: 12px;
+  }
+  .slide-icons .icon-circle {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: bold; flex-shrink: 0;
+    font-family: var(--body-font);
+  }
+  .slide-icons .row-content { display: flex; flex-direction: column; }
+  .slide-icons .row-label {
+    font-size: 13px; font-weight: bold; font-family: var(--header-font);
+  }
+  .slide-icons .row-desc {
+    font-size: 11px; margin-top: 2px; font-family: var(--body-font);
+    max-width: 380px;
+  }
+
+  /* Callout / key takeaway */
+  .slide-callout .heading {
+    position: absolute; font-size: 18px; font-weight: bold;
+    left: 28px; top: 24px; font-family: var(--header-font);
+  }
+  .slide-callout .body-line {
+    position: absolute; font-size: 12px; left: 28px;
+    font-family: var(--body-font); max-width: 420px;
+  }
+  .slide-callout .callout-box {
+    position: absolute; left: 28px; right: 28px; bottom: 28px;
+    border-radius: 6px; padding: 14px 18px;
+  }
+  .slide-callout .callout-label {
+    font-size: 10px; font-weight: bold; letter-spacing: 1px;
+    text-transform: uppercase; margin-bottom: 4px;
+    font-family: var(--header-font);
+  }
+  .slide-callout .callout-text {
+    font-size: 12px; line-height: 1.5; font-family: var(--body-font);
+  }
+
+  /* Steps / timeline */
+  .slide-steps .heading {
+    position: absolute; font-size: 18px; font-weight: bold;
+    left: 28px; top: 24px; font-family: var(--header-font);
+  }
+  .slide-steps .step {
+    position: absolute; display: flex; align-items: flex-start; gap: 12px;
+    left: 28px;
+  }
+  .slide-steps .step-number {
+    width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: bold; flex-shrink: 0;
+    font-family: var(--body-font);
+  }
+  .slide-steps .step-content { display: flex; flex-direction: column; }
+  .slide-steps .step-label {
+    font-size: 13px; font-weight: bold; font-family: var(--header-font);
+  }
+  .slide-steps .step-desc {
+    font-size: 11px; margin-top: 2px; font-family: var(--body-font);
+    max-width: 380px;
+  }
+  .slide-steps .step-connector {
+    position: absolute; width: 2px; border-radius: 1px;
+  }
+
+  /* Section divider */
+  .slide-divider .section-label {
+    position: absolute; font-size: 12px; left: 36px; top: 80px;
+    font-family: var(--body-font); letter-spacing: 1px; text-transform: uppercase;
+  }
+  .slide-divider .section-title {
+    position: absolute; font-size: 28px; font-weight: bold;
+    left: 36px; top: 102px; font-family: var(--header-font);
+  }
+  .slide-divider .progress-bar {
+    position: absolute; bottom: 24px; left: 36px; right: 36px;
+    height: 4px; border-radius: 2px; overflow: hidden;
+  }
+  .slide-divider .progress-fill {
+    height: 100%; border-radius: 2px;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>{{ title }}</h1>
+  <theme-preview v-for="t in themes" :key="t.name" v-bind="t" />
+</div>
+
+<script>
+const ThemePreview = {
+  props: {
+    name:    String,
+    desc:    String,
+    primary: String,   // brand color (dark slides bg, callout boxes, markers)
+    secondary: String, // light content bg
+    heading: String,   // dark heading color (on light slides)
+    body:    String,    // dark body text (on light slides)
+    muted:   String,    // gray captions (on light slides)
+    accent:  String,    // highlight color
+    headerFont: { type: String, default: 'Trebuchet MS, sans-serif' },
+    bodyFont:   { type: String, default: 'Calibri, system-ui, sans-serif' },
+    fontLabel:  { type: String, default: '' },
+  },
+  computed: {
+    m() { return this.muted || this.body; },
+    // Tint of primary for callout box backgrounds (15% opacity simulated)
+    calloutBg() {
+      const hex = this.primary.replace('#', '');
+      const r = parseInt(hex.substr(0, 2), 16);
+      const g = parseInt(hex.substr(2, 2), 16);
+      const b = parseInt(hex.substr(4, 2), 16);
+      // Blend 15% toward the secondary background
+      const bg = this.secondary.replace('#', '');
+      const br = parseInt(bg.substr(0, 2), 16);
+      const bg2 = parseInt(bg.substr(2, 2), 16);
+      const bb = parseInt(bg.substr(4, 2), 16);
+      const mix = (a, c) => Math.round(a * 0.15 + c * 0.85);
+      return `rgb(${mix(r, br)}, ${mix(g, bg2)}, ${mix(b, bb)})`;
+    },
+    // Muted white for dark slides
+    darkMuted() { return 'rgba(255,255,255,0.5)'; },
+    // Progress bar background (faint white on dark)
+    progressBg() { return 'rgba(255,255,255,0.2)'; },
+    colors() {
+      return [
+        ['Primary', this.primary],
+        ['Secondary', this.secondary],
+        ['Heading', this.heading],
+        ['Body', this.body],
+        ['Muted', this.muted],
+        ['Accent', this.accent],
+      ];
+    },
+  },
+  template: `
+    <div class="theme" :style="{ '--header-font': headerFont, '--body-font': bodyFont }">
+      <div class="theme-name">{{ name }}</div>
+      <div v-if="fontLabel" class="theme-font-label">{{ fontLabel }}</div>
+      <div v-if="desc" class="theme-desc">{{ desc }}</div>
+      <div class="theme-colors">
+        <span v-for="[label, hex] in colors" :key="label">
+          <span class="swatch" :style="{ background: hex }"></span>{{ label }}: {{ hex }}
+        </span>
+      </div>
+      <div class="slides">
+
+        <!-- Title slide (dark — primary bg) -->
+        <div class="slide slide-title" :style="{ background: primary }">
+          <div class="title" :style="{ color: '#FFFFFF' }">Introduction to UX Research</div>
+          <div class="subtitle" :style="{ color: darkMuted }">Workshop Series — Module 1 of 5</div>
+          <div class="progress-dots">
+            <div class="dot" :style="{ background: accent }"></div>
+            <div class="dot" :style="{ background: darkMuted }"></div>
+            <div class="dot" :style="{ background: darkMuted }"></div>
+            <div class="dot" :style="{ background: darkMuted }"></div>
+            <div class="dot" :style="{ background: darkMuted }"></div>
+          </div>
+          <div class="slide-label" :style="{ color: darkMuted }">title slide</div>
+        </div>
+
+        <!-- Icon + text rows (light — secondary bg) -->
+        <div class="slide slide-icons" :style="{ background: secondary, border: '1px solid rgba(0,0,0,0.08)' }">
+          <div class="heading" :style="{ color: heading }">Core Methods</div>
+          <div class="row" :style="{ top: '60px' }">
+            <div class="icon-circle" :style="{ background: primary, color: '#fff' }">1</div>
+            <div class="row-content">
+              <div class="row-label" :style="{ color: heading }">Interviews</div>
+              <div class="row-desc" :style="{ color: body }">One-on-one conversations to understand <span :style="{ color: accent, fontWeight: 'bold' }">user goals</span>, pain points, and mental models.</div>
+            </div>
+          </div>
+          <div class="row" :style="{ top: '120px' }">
+            <div class="icon-circle" :style="{ background: primary, color: '#fff' }">2</div>
+            <div class="row-content">
+              <div class="row-label" :style="{ color: heading }">Surveys</div>
+              <div class="row-desc" :style="{ color: body }">Structured questionnaires for quantitative insights across larger populations.</div>
+            </div>
+          </div>
+          <div class="row" :style="{ top: '180px' }">
+            <div class="icon-circle" :style="{ background: primary, color: '#fff' }">3</div>
+            <div class="row-content">
+              <div class="row-label" :style="{ color: heading }">Usability Testing</div>
+              <div class="row-desc" :style="{ color: body }">Observing real users as they complete tasks to identify <span :style="{ color: accent, fontWeight: 'bold' }">friction</span> and confusion.</div>
+            </div>
+          </div>
+          <div class="slide-label" :style="{ color: m }">icon + text rows</div>
+        </div>
+
+        <!-- Callout / key takeaway (light — secondary bg) -->
+        <div class="slide slide-callout" :style="{ background: secondary, border: '1px solid rgba(0,0,0,0.08)' }">
+          <div class="heading" :style="{ color: heading }">Choosing a Method</div>
+          <div class="body-line" :style="{ color: body, top: '56px' }">Match the method to your research question. Interviews</div>
+          <div class="body-line" :style="{ color: body, top: '74px' }">reveal why; surveys reveal how many; usability tests</div>
+          <div class="body-line" :style="{ color: body, top: '92px' }">reveal where things break down.</div>
+          <div class="callout-box" :style="{ background: calloutBg }">
+            <div class="callout-label" :style="{ color: accent }">Key Takeaway</div>
+            <div class="callout-text" :style="{ color: heading }">Start with qualitative methods (interviews, observation) to discover what you don't know, then use quantitative methods (surveys, analytics) to measure how widespread those findings are.</div>
+          </div>
+          <div class="slide-label" :style="{ color: m }">callout slide</div>
+        </div>
+
+        <!-- Steps / timeline (light — secondary bg) -->
+        <div class="slide slide-steps" :style="{ background: secondary, border: '1px solid rgba(0,0,0,0.08)' }">
+          <div class="heading" :style="{ color: heading }">Research Process</div>
+          <div class="step-connector" :style="{ background: primary, opacity: 0.2, left: '41px', top: '72px', height: '140px' }"></div>
+          <div class="step" :style="{ top: '60px' }">
+            <div class="step-number" :style="{ background: primary, color: '#fff' }">1</div>
+            <div class="step-content">
+              <div class="step-label" :style="{ color: heading }">Define the question</div>
+              <div class="step-desc" :style="{ color: body }">What do you need to learn? Frame it as a specific, answerable question.</div>
+            </div>
+          </div>
+          <div class="step" :style="{ top: '120px' }">
+            <div class="step-number" :style="{ background: primary, color: '#fff' }">2</div>
+            <div class="step-content">
+              <div class="step-label" :style="{ color: heading }">Recruit participants</div>
+              <div class="step-desc" :style="{ color: body }">Find 5-8 people who match your target user profile.</div>
+            </div>
+          </div>
+          <div class="step" :style="{ top: '180px' }">
+            <div class="step-number" :style="{ background: primary, color: '#fff' }">3</div>
+            <div class="step-content">
+              <div class="step-label" :style="{ color: heading }">Conduct and synthesize</div>
+              <div class="step-desc" :style="{ color: body }">Run sessions, identify patterns, and distill into <span :style="{ color: accent, fontWeight: 'bold' }">actionable findings</span>.</div>
+            </div>
+          </div>
+          <div class="slide-label" :style="{ color: m }">steps slide</div>
+        </div>
+
+        <!-- Section divider (dark — primary bg) -->
+        <div class="slide slide-divider" :style="{ background: primary }">
+          <div class="section-label" :style="{ color: darkMuted }">Section 2 of 5</div>
+          <div class="section-title" :style="{ color: '#FFFFFF' }">Interview Techniques</div>
+          <div class="progress-bar" :style="{ background: progressBg }">
+            <div class="progress-fill" :style="{ background: accent, width: '40%' }"></div>
+          </div>
+          <div class="slide-label" :style="{ color: darkMuted }">section divider</div>
+        </div>
+
+      </div>
+    </div>
+  `,
+};
+
+const { createApp } = Vue;
+
+createApp({
+  components: { ThemePreview },
+  data() {
+    return {
+      title: 'Educational Direction — Palette Previews',
+      themes: [
+        {
+          name: 'Teal & Warm Gray',
+          desc: 'Clean, professional, works for corporate training and onboarding. The teal is authoritative enough to anchor dark slides but approachable enough not to intimidate.',
+          primary: '#028090', secondary: '#F2F2F2',
+          heading: '#1A3A40', body: '#4A4A4A', muted: '#8A8A8A', accent: '#F96167',
+          headerFont: 'Trebuchet MS, sans-serif',
+          bodyFont: 'Verdana, system-ui, sans-serif',
+          fontLabel: 'Trebuchet MS + Verdana',
+        },
+        {
+          name: 'Soft Blue & Cream',
+          desc: 'Warmer, approachable, works for workshops and tutorials. The cream background reduces eye strain for longer sessions.',
+          primary: '#4A90B8', secondary: '#FAF7F0',
+          heading: '#1E3A50', body: '#4A4A4A', muted: '#8A8A8A', accent: '#E8734A',
+          headerFont: 'Trebuchet MS, sans-serif',
+          bodyFont: 'Calibri, system-ui, sans-serif',
+          fontLabel: 'Trebuchet MS + Calibri',
+        },
+        {
+          name: 'Sage & Slate',
+          desc: 'Calm, grounded, works for longer training sessions where visual fatigue is a concern. The muted greens feel natural and unhurried.',
+          primary: '#6B9080', secondary: '#F5F5F0',
+          heading: '#2A3E34', body: '#4A4A4A', muted: '#8A8A8A', accent: '#C05746',
+          headerFont: 'Georgia, serif',
+          bodyFont: 'Calibri, system-ui, sans-serif',
+          fontLabel: 'Georgia + Calibri',
+        },
+        {
+          name: 'Plum & Sand',
+          desc: 'Distinctive without being flashy, works for academic or specialized education contexts. The purple carries enough personality to feel intentional.',
+          primary: '#7B5EA7', secondary: '#F0EDE5',
+          heading: '#3A2E50', body: '#4A4A4A', muted: '#8A8A8A', accent: '#DE5976',
+          headerFont: 'Georgia, serif',
+          bodyFont: 'Calibri, system-ui, sans-serif',
+          fontLabel: 'Georgia + Calibri',
+        },
+      ],
+    };
+  },
+}).mount('#app');
+</script>
+</body>
+</html>

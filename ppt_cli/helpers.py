@@ -8,7 +8,6 @@ import sys
 from pptx import Presentation
 from pptx.util import Inches, Pt, Emu
 from pptx.dml.color import RGBColor
-from pptx.enum.text import PP_ALIGN
 
 
 def _die(msg):

@@ -13,8 +13,6 @@ NS_P = "http://schemas.openxmlformats.org/presentationml/2006/main"
 NS_CT = "http://schemas.openxmlformats.org/package/2006/content-types"
 NS_REL = "http://schemas.openxmlformats.org/package/2006/relationships"
 
-NSMAP = {"a": NS_A, "r": NS_R, "p": NS_P}
-
 # Relationship type URIs
 RT_SLIDE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide"
 RT_SLIDE_LAYOUT = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout"

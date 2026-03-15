@@ -1,17 +1,49 @@
 """Content insertion commands: add-image, add-textbox, add-table, delete-shape."""
 
 import csv
+import io
 import os
 
 from .helpers import (_die, _open, _get_slide, _find_shape, _save,
                       _parse_length, _parse_color, Inches, Pt)
+from .image_gen import SUPPORTED_RATIOS as _SUPPORTED_RATIOS
 
 
-_SUPPORTED_RATIOS = {
-    "1:1", "9:16", "16:9", "3:4", "4:3",
-    "3:2", "2:3", "5:4", "4:5", "21:9",
-    "9:21", "1:4", "4:1", "1:8", "8:1",
-}
+def _crop_to_ratio(image_source, target_w_emu, target_h_emu):
+    """Crop image minimally (center crop) to match the target aspect ratio."""
+    from PIL import Image
+
+    img = Image.open(image_source)
+    img_w, img_h = img.size
+    target_ratio = target_w_emu / target_h_emu
+    img_ratio = img_w / img_h
+
+    if abs(img_ratio - target_ratio) / max(target_ratio, 1e-9) < 0.01:
+        # Already close enough — return as-is
+        if hasattr(image_source, "seek"):
+            image_source.seek(0)
+            return image_source
+        buf = io.BytesIO()
+        img.save(buf, format="PNG")
+        buf.seek(0)
+        return buf
+
+    if img_ratio > target_ratio:
+        # Image is wider — crop width
+        new_w = int(img_h * target_ratio)
+        offset = (img_w - new_w) // 2
+        box = (offset, 0, offset + new_w, img_h)
+    else:
+        # Image is taller — crop height
+        new_h = int(img_w / target_ratio)
+        offset = (img_h - new_h) // 2
+        box = (0, offset, img_w, offset + new_h)
+
+    cropped = img.crop(box)
+    buf = io.BytesIO()
+    cropped.save(buf, format="PNG")
+    buf.seek(0)
+    return buf
 
 
 def _guess_ratio(w_emu, h_emu):
@@ -39,12 +71,21 @@ def cmd_add_image(args):
     if not prompt and not image:
         _die("provide an image path or --prompt")
 
+    # Validate --ref
+    ref_images = getattr(args, "ref", None) or []
+    if len(ref_images) > 14:
+        _die(f"--ref accepts at most 14 images, got {len(ref_images)}")
+    for img_path in ref_images:
+        if not os.path.isfile(img_path):
+            _die(f"reference image not found: {img_path}")
+
     # Validate prompt-only flags
     prompt_only_flags = {
         "--resolution": getattr(args, "resolution", "1k") != "1k",
         "--ratio": getattr(args, "ratio", None) is not None,
         "--grounding": getattr(args, "grounding", None) is not None,
         "--reasoning": getattr(args, "reasoning", False),
+        "--ref": len(ref_images) > 0,
     }
     if not prompt:
         for flag, used in prompt_only_flags.items():
@@ -66,7 +107,7 @@ def cmd_add_image(args):
                  f"Supported: {', '.join(sorted(_SUPPORTED_RATIOS))}")
 
         if not os.environ.get("GEMINI_API_KEY"):
-            _die("GEMINI_API_KEY not set. Get one at https://aistudio.google.com/api-keys")
+            _die("GEMINI_API_KEY not set. Get one at https://aistudio.google.com/api-keys or https://console.cloud.google.com/apis/credentials")
 
         # Auto-guess ratio from w/h if not explicit
         if not ratio and w and h:
@@ -80,8 +121,11 @@ def cmd_add_image(args):
             aspect_ratio=ratio,
             grounding=args.grounding,
             reasoning=args.reasoning,
+            ref_images=ref_images or None,
         )
 
+        if w and h:
+            buf = _crop_to_ratio(buf, w, h)
         kwargs = {"image_file": buf, "left": x, "top": y}
         if w:
             kwargs["width"] = w
@@ -99,7 +143,10 @@ def cmd_add_image(args):
         if not os.path.isfile(image):
             _die(f"image not found: {image}")
 
-        kwargs = {"image_file": image, "left": x, "top": y}
+        img_source = image
+        if w and h:
+            img_source = _crop_to_ratio(image, w, h)
+        kwargs = {"image_file": img_source, "left": x, "top": y}
         if w:
             kwargs["width"] = w
         if h:

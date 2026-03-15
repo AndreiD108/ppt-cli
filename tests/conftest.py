@@ -10,9 +10,24 @@ import pytest
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
+def _setup_install_json(tmp_path):
+    """Write a pre-populated install.json so the setup check is satisfied."""
+    from ppt_cli import __version__
+    install_json = str(tmp_path / "install.json")
+    with open(install_json, "w") as f:
+        json.dump({
+            "ppt_cli_version": __version__,
+            "skill_installed": True,
+            "skill_hash": "",
+            "installed_at": "2026-01-01T00:00:00+00:00",
+        }, f)
+    return install_json
+
+
 @pytest.fixture
 def cli(tmp_path):
     """Return a helper that runs ppt_cli and returns (returncode, stdout, stderr)."""
+    install_json = _setup_install_json(tmp_path)
 
     def run(*args):
         result = subprocess.run(
@@ -20,7 +35,8 @@ def cli(tmp_path):
             capture_output=True,
             text=True,
             cwd=str(tmp_path),
-            env={**os.environ, "PYTHONPATH": PROJECT_DIR},
+            env={**os.environ, "PYTHONPATH": PROJECT_DIR,
+                 "PPT_CLI_INSTALL_JSON": install_json},
         )
         return result.returncode, result.stdout, result.stderr
 
@@ -74,6 +90,7 @@ def staged_deck(cli, tmp_pptx):
 def cli_with_template_dir(tmp_path):
     """CLI fixture with isolated template directory. Returns (run_fn, template_dir)."""
     tmpl_dir = str(tmp_path / "templates")
+    install_json = _setup_install_json(tmp_path)
 
     def run(*args):
         result = subprocess.run(
@@ -81,7 +98,9 @@ def cli_with_template_dir(tmp_path):
             capture_output=True,
             text=True,
             cwd=str(tmp_path),
-            env={**os.environ, "PYTHONPATH": PROJECT_DIR, "PPT_CLI_TEMPLATE_DIR": tmpl_dir},
+            env={**os.environ, "PYTHONPATH": PROJECT_DIR,
+                 "PPT_CLI_TEMPLATE_DIR": tmpl_dir,
+                 "PPT_CLI_INSTALL_JSON": install_json},
         )
         return result.returncode, result.stdout, result.stderr
 

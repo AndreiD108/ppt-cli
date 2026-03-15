@@ -7,3 +7,8 @@ dist/
 build/
 todo.md
 progress.md
+image-gen-tests/[0-9]*/
+.idea/
+.claude/
+.DS_Store
+wip/

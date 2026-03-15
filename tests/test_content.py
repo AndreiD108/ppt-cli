@@ -27,7 +27,9 @@ def _write_minimal_png(path):
 
 def _cli_no_api_key(tmp_path):
     """Return a CLI runner with GEMINI_API_KEY explicitly removed."""
-    env = {**os.environ, "PYTHONPATH": PROJECT_DIR}
+    from conftest import _setup_install_json
+    env = {**os.environ, "PYTHONPATH": PROJECT_DIR,
+           "PPT_CLI_INSTALL_JSON": _setup_install_json(tmp_path)}
     env.pop("GEMINI_API_KEY", None)
 
     def run(*args):
@@ -168,3 +170,35 @@ def test_add_image_prompt_without_api_key(tmp_path):
     rc, out, err = run("add-image", pptx, "1", "--prompt", "a cat")
     assert rc != 0
     assert "GEMINI_API_KEY" in err
+
+
+def test_add_image_ref_without_prompt(cli, deck_with_slide, tmp_path):
+    """Error when --ref is used without --prompt."""
+    path, _ = deck_with_slide
+    img_path = str(tmp_path / "pixel.png")
+    _write_minimal_png(img_path)
+    rc, out, err = cli("add-image", path, "1", img_path, "--ref", img_path)
+    assert rc != 0
+    assert "--prompt" in err
+
+
+def test_add_image_ref_too_many(cli, deck_with_slide, tmp_path):
+    """Error when more than 14 reference images are passed."""
+    path, _ = deck_with_slide
+    paths = []
+    for i in range(15):
+        p = str(tmp_path / f"ref{i}.png")
+        _write_minimal_png(p)
+        paths.append(p)
+    rc, out, err = cli("add-image", path, "1", "--prompt", "a cat", "--ref", *paths)
+    assert rc != 0
+    assert "14" in err
+
+
+def test_add_image_ref_file_not_found(cli, deck_with_slide):
+    """Error when a reference image does not exist."""
+    path, _ = deck_with_slide
+    rc, out, err = cli("add-image", path, "1", "--prompt", "a cat",
+                       "--ref", "/nonexistent/img.png")
+    assert rc != 0
+    assert "not found" in err.lower()
