@@ -1,6 +1,6 @@
 # Image Generation Eval Framework
 
-Comparative test framework for evaluating the effect of the image generation skill file (`ppt_cli/skill/2-image-generation.md`) on prompt quality. Each run produces side-by-side comparisons: agents that read the skill file ("guided") vs agents that don't ("unguided").
+Comparative test framework for evaluating the effect of the image generation skill file on prompt quality. Guided agents read `ppt_cli/skill/image-gen.md` (core methodology: prompt templates, style vocabulary, traps, workflow patterns, editing operations). Each run produces side-by-side comparisons: guided vs unguided agents.
 
 ## Run structure
 
@@ -95,7 +95,8 @@ Both agents in each pair receive identical context:
 
 Each agent writes 3 different prompts per image type and runs them in parallel. The prompts should vary in approach, composition, or creative interpretation — not just be minor rewrites of the same idea.
 
-The **guided** agent additionally reads `ppt_cli/skill/2-image-generation.md` before crafting prompts.
+The **guided** agent reads one file before crafting prompts:
+- `ppt_cli/skill/image-gen.md` — core methodology (prompt templates, style vocabulary, traps, workflow patterns, editing operations)
 
 The **unguided** agent is explicitly told NOT to read any files.
 
@@ -120,7 +121,7 @@ Neither agent receives:
 {
   "run": "002",
   "timestamp": "2026-03-14T...",
-  "skill_file": "ppt_cli/skill/2-image-generation.md",
+  "skill_file": "ppt_cli/skill/image-gen.md",
   "skill_file_hash": "sha256:...",
   "stock_images_hash": "sha256:...",
   "resolution": "1k",
@@ -189,14 +190,15 @@ For grouped agents (e.g. concept+icon+chart+text in one agent), all prompts from
 - **`image-gen-tests/results-template.html`** — the reusable Vue app template. Contains all 24 image types (01–16 generation, 17–24 reference), carousel lightbox, reference image column support, and `EDIT:` markers for scenario-specific content. Placeholders `{{RUN}}` and `{{DATE}}` are substituted by `init-run.sh`.
 - **`image-gen-tests/stock/`** — pre-generated reference images for units 7–10 (see Stock images).
 - **`image-gen-tests/prompts-reference.json`** — reference for the expected JSON structure (keyed by prefix like `01-fullbleed`, arrays of 3 prompts per side).
-- **`ppt_cli/skill/2-image-generation.md`** — the skill file that guided agents read. Hash this before each run to track changes.
+- **`ppt_cli/skill/image-gen.md`** — core image generation skill file. Hash before each run.
 
 ## Agent prompt templates
 
 **Guided agent (single-type, e.g. fullbleed):**
 > You are generating 3 images using ppt-cli for an eval test. Each image must use a DIFFERENT prompt — 3 unique creative interpretations of the same brief.
 >
-> **FIRST:** Read `/path/to/skill/2-image-generation.md`. Use what you learn to craft prompts.
+> **FIRST:** Read this file and use what you learn to craft prompts:
+> - `/path/to/skill/image-gen.md` — image generation methodology
 >
 > **Presentation context:** [scenario]
 >
@@ -218,7 +220,8 @@ For grouped agents (e.g. concept+icon+chart+text in one agent), all prompts from
 **Reference-image agent (guided, e.g. duotone, character consistency):**
 > You are generating 3 images using ppt-cli for an eval test. Each image must use a DIFFERENT prompt — 3 unique creative interpretations of the same brief.
 >
-> **FIRST:** Read `/path/to/skill/2-image-generation.md`. Use what you learn to craft prompts — especially the sections on image editing and reference images.
+> **FIRST:** Read this file and use what you learn to craft prompts:
+> - `/path/to/skill/image-gen.md` — especially the sections on image editing and reference images
 >
 > **Presentation context:** [scenario]
 >

@@ -40,7 +40,7 @@ if [ "$stock_ok" = false ]; then
 fi
 
 # ── Skill file hash ────────────────────────────────────────────────
-SKILL_FILE="$SCRIPT_DIR/../ppt_cli/skill/2-image-generation.md"
+SKILL_FILE="$SCRIPT_DIR/../ppt_cli/skill/image-gen.md"
 if [ -f "$SKILL_FILE" ]; then
   skill_hash=$(sha256sum "$SKILL_FILE" | cut -d' ' -f1)
 else
@@ -61,7 +61,7 @@ cat > "$RUN_DIR/metadata.json" << EOF
 {
   "run": "$next",
   "timestamp": "$TODAY",
-  "skill_file": "ppt_cli/skill/2-image-generation.md",
+  "skill_file": "ppt_cli/skill/image-gen.md",
   "skill_file_hash": "sha256:$skill_hash",
   "stock_images_hash": "sha256:$stock_hash",
   "resolution": "1k",
