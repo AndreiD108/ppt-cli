@@ -22,7 +22,7 @@ from .ooxml import (
     _pres_path, _remove_layout_from_master_xml,
 )
 from .template_registry import (
-    _validate_template_name, _ensure_template_dir, _save_to_registry,
+    _validate_template_name, _ensure_template_dir, _get_template_dir_path,
 )
 
 
@@ -265,11 +265,10 @@ def cmd_build_template(args):
         _die(f"not a directory: {staged}")
 
     tmpl_dir = _ensure_template_dir()
-    filename = f"{args.name}.pptx"
-    dest = os.path.join(tmpl_dir, filename)
-
-    if os.path.isfile(dest) and not args.force:
-        _die(f"template {args.name!r} already exists (use -f to overwrite)")
+    dest_dir = _get_template_dir_path(args.name)
+    os.makedirs(dest_dir, exist_ok=True)
+    os.makedirs(os.path.join(dest_dir, "screenshots"), exist_ok=True)
+    dest = os.path.join(dest_dir, "template.pptx")
 
     warnings = _validate_staged(staged)
     if warnings:
@@ -277,7 +276,6 @@ def cmd_build_template(args):
             print(f"warning: {w}", file=sys.stderr)
 
     _build_pptx(staged, dest)
-    _save_to_registry(args.name, args.description or "", filename)
 
     # Print summary
     prs = Presentation(dest)
@@ -285,8 +283,10 @@ def cmd_build_template(args):
     print(json.dumps({
         "template": args.name,
         "path": dest,
+        "template_dir": dest_dir,
         "layouts": layout_names,
         "warnings": warnings,
+        "next_step": "Write design-system.yaml in the template directory, then run 'ppt-cli template save {}'".format(args.name),
     }))
 
 

@@ -1,4 +1,5 @@
 python-pptx
 google-genai
 Pillow
+PyYAML
 pytest

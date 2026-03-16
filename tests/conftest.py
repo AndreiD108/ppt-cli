@@ -100,7 +100,8 @@ def cli_with_template_dir(tmp_path):
             cwd=str(tmp_path),
             env={**os.environ, "PYTHONPATH": PROJECT_DIR,
                  "PPT_CLI_TEMPLATE_DIR": tmpl_dir,
-                 "PPT_CLI_INSTALL_JSON": install_json},
+                 "PPT_CLI_INSTALL_JSON": install_json,
+                 "PPT_CLI_NO_SCREENSHOTS": "1"},
         )
         return result.returncode, result.stdout, result.stderr
 

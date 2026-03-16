@@ -8,7 +8,7 @@ import shutil
 import subprocess
 import tempfile
 
-from .helpers import _die, _open, _get_slide, Presentation
+from .helpers import _die, _open, _get_slide, _find_libreoffice, _is_snap_lo, Presentation
 from .serialisation import _emu_to_in, _dump_slide, _peek_slide
 
 
@@ -89,32 +89,6 @@ def cmd_peek(args):
             print()
         print(_peek_with_hidden(slide, n))
         first = False
-
-
-def _is_snap_lo(lo_path):
-    """Check if LibreOffice is a snap installation."""
-    try:
-        real = os.path.realpath(
-            subprocess.run(["which", lo_path], capture_output=True,
-                           text=True).stdout.strip())
-        return "/snap/" in real or "/snap/" in subprocess.run(
-            ["which", lo_path], capture_output=True, text=True).stdout
-    except Exception:
-        return False
-
-
-def _find_libreoffice():
-    """Find a working LibreOffice binary. Returns (path, is_snap) or dies."""
-    for name in ("libreoffice", "soffice"):
-        try:
-            if subprocess.run(["which", name], capture_output=True).returncode == 0:
-                return name, _is_snap_lo(name)
-        except FileNotFoundError:
-            continue
-    mac_lo = "/Applications/LibreOffice.app/Contents/MacOS/soffice"
-    if os.path.isfile(mac_lo):
-        return mac_lo, False
-    _die("libreoffice not found, screenshotting not supported")
 
 
 def _file_hash(path):

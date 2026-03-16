@@ -6,6 +6,8 @@ import re
 import sys
 from datetime import datetime, timezone
 
+import yaml
+
 
 def _template_dir():
     """Return the template directory path, respecting PPT_CLI_TEMPLATE_DIR env var."""
@@ -55,31 +57,93 @@ def _validate_template_name(name):
     return True
 
 
-def _save_to_registry(name, description, filename):
+def _save_to_registry(name):
     """Add or update a template in the registry."""
     registry = _load_registry()
     now = datetime.now(timezone.utc).isoformat()
     if name in registry["templates"]:
-        registry["templates"][name]["description"] = description
-        registry["templates"][name]["filename"] = filename
         registry["templates"][name]["updated"] = now
     else:
         registry["templates"][name] = {
-            "description": description,
-            "filename": filename,
             "created": now,
             "updated": now,
         }
     _save_registry(registry)
 
 
+def _get_template_dir_path(name):
+    """Return <template_dir>/<name>/."""
+    return os.path.join(_template_dir(), name)
+
+
 def _get_template_path(name):
     """Get the full path to a template's .pptx file. Returns None if not found."""
-    registry = _load_registry()
-    entry = registry["templates"].get(name)
-    if not entry:
+    path = os.path.join(_template_dir(), name, "template.pptx")
+    if os.path.isfile(path):
+        return path
+    return None
+
+
+def _get_design_system_path(name):
+    """Return <template_dir>/<name>/design-system.yaml."""
+    return os.path.join(_template_dir(), name, "design-system.yaml")
+
+
+def _read_description_from_yaml(yaml_path):
+    """Read description field from a design-system.yaml. Returns str or None."""
+    if not os.path.isfile(yaml_path):
         return None
-    return os.path.join(_template_dir(), entry["filename"])
+    with open(yaml_path) as f:
+        data = yaml.safe_load(f)
+    if not isinstance(data, dict):
+        return None
+    return data.get("description")
+
+
+def _validate_design_system(tmpl_dir_path):
+    """Validate design-system.yaml in a template directory.
+
+    Returns list of error strings (empty = valid).
+    """
+    errors = []
+    yaml_path = os.path.join(tmpl_dir_path, "design-system.yaml")
+    if not os.path.isfile(yaml_path):
+        errors.append("design-system.yaml not found")
+        return errors
+
+    with open(yaml_path) as f:
+        raw = f.read()
+
+    try:
+        data = yaml.safe_load(raw)
+    except yaml.YAMLError as e:
+        errors.append(f"invalid YAML: {e}")
+        return errors
+
+    if not isinstance(data, dict):
+        errors.append("design-system.yaml must be a YAML mapping")
+        return errors
+
+    if not data.get("description"):
+        errors.append("design-system.yaml missing required 'description' field")
+
+    # Check that all PNGs in screenshots/ are referenced in yaml text
+    screenshots_dir = os.path.join(tmpl_dir_path, "screenshots")
+    if os.path.isdir(screenshots_dir):
+        pngs = [f for f in os.listdir(screenshots_dir) if f.endswith(".png")]
+        for png in pngs:
+            if png not in raw:
+                errors.append(f"screenshot {png!r} not referenced in design-system.yaml")
+
+    return errors
+
+
+def _slugify_layout_name(name):
+    """'Title Slide' -> 'title-slide' for screenshot filenames."""
+    slug = name.lower().strip()
+    slug = re.sub(r"[^a-z0-9]+", "-", slug)
+    slug = slug.strip("-")
+    return slug or "unnamed"
 
 
 def _get_default_template():

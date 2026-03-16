@@ -134,18 +134,24 @@ After direction chosen: !READ(design-system.yaml) -- direction-specific section
 
 ### S2t: template analysis
 
-Analyze provided template/branded deck:
-  `internals analyze` | `internals fingerprint` | `peek --all` | `screenshot --all`
+?template_has_design_system:
+  Read `design-system.yaml` from the template directory (`template show <name>` → `design_system_path`).
+  Also read layout screenshots from `screenshots/` dir.
+  The design system is pre-derived — use it directly. Skip analysis commands.
+  >>S3
 
-Derive design system (same schema as direction-based):
-  palette (roles + hex) | fonts (heading + body) | motif (principle + manifestations) |
-  layout_patterns | spacing | bg_strategy
+?template_without_design_system (branded deck or file path):
+  Analyze: `internals analyze` | `internals fingerprint` | `peek --all` | `screenshot --all`
 
-Record derived system in plan file. Template is the authority — when it consistently
-diverges from universals (e.g., centered body text), follow the template.
+  Derive design system (same schema as direction-based):
+    palette (roles + hex) | fonts (heading + body) | motif (principle + manifestations) |
+    layout_patterns | spacing | bg_strategy
 
-?incomplete: extend conservatively. Prefer plain-but-consistent over polished-but-foreign.
-?ambiguous (internal inconsistency): pick dominant pattern (most frequent). Flag at K/F.
+  Record derived system in plan file. Template is the authority — when it consistently
+  diverges from universals (e.g., centered body text), follow the template.
+
+  ?incomplete: extend conservatively. Prefer plain-but-consistent over polished-but-foreign.
+  ?ambiguous (internal inconsistency): pick dominant pattern (most frequent). Flag at K/F.
 
 >>S3
 
@@ -357,23 +363,39 @@ Compare against intent. Fix if needed.
 `ppt-cli internals stage <deck>`
 Remove content slides, unused layouts, embedded media.
 Keep: masters, layouts, theme, branded elements.
-`ppt-cli internals build-template <staged-dir> --name=<name> --description="..."`
+`ppt-cli internals build-template <staged-dir> --name=<name>`
+This creates `<name>/template.pptx` + `<name>/screenshots/` in the template dir but does NOT register.
+>>T2
+
+### T2: write design system and register
+
+Write `design-system.yaml` in the template directory. Use the template_analysis procedure
+from `3-design-template.yaml` to derive palette, typography, motif, layout patterns,
+spacing, and background strategy from the source deck analysis (A0-A3 output).
+
+The yaml MUST have:
+  - `description:` field (required for validation)
+  - References to every PNG in `screenshots/` (filename must appear in yaml text)
+  - Derived design system fields: palette, typography, motif, layout_patterns, spacing, bg_strategy
+
+Then: `ppt-cli template save <name>` to validate and register.
+>>T3
+
+### T3: verify template
+`ppt-cli create /tmp/test-deck.pptx --template <name>`
+`ppt-cli template show <name>`
+Confirm layouts, masters, and theme survived.
 
 Recipes:
   **Evolve template** — `template show <name>` for path, `internals stage` it,
     edit theme/layout XML, `internals duplicate layout` for variants,
-    `internals build-template --name=<name> -f` to overwrite.
+    `internals build-template --name=<name>`, write updated design-system.yaml,
+    `template save <name>`.
   **Promote freehand to layout** — fingerprint reveals shared structure,
     `internals add layout <staged-dir> --name "X" --master 1`, edit layout XML
     to add placeholder shapes matching fingerprint.
   **Audit layout fidelity** — `internals analyze` + `internals stage`, read slide
     XMLs alongside layout XMLs. `<p:ph>` = placeholder; no `<p:ph>` = freehand.
->>T2
-
-### T2: verify template
-`ppt-cli create /tmp/test-deck.pptx --template <name>`
-`ppt-cli template show <name>`
-Confirm layouts, masters, and theme survived.
 
 ---
 
@@ -381,13 +403,16 @@ Confirm layouts, masters, and theme survived.
 
 No protocol needed. Direct commands:
 ```
-ppt-cli template list                    # all templates
-ppt-cli template show <name>             # path, description, layouts
-ppt-cli template rename <old> <new>      # optionally --description="..."
-ppt-cli template delete <name>           # remove from registry and disk
+ppt-cli template prepare <name> <file>   # create dir, copy pptx, generate screenshots
+ppt-cli template save <name>             # validate design-system.yaml + register
+ppt-cli template list                    # all templates (shows design-system.yaml path)
+ppt-cli template show <name>             # path, description, layouts, design_system_path
+ppt-cli template rename <old> <new>      # renames directory
+ppt-cli template delete <name>           # remove directory and registry entry
 ppt-cli template default                 # print current default
 ppt-cli template default <name>          # set default
 ppt-cli template default --unset         # clear default
+ppt-cli template update-design-system <name> <yaml>  # replace design-system.yaml
 ```
 
 ---

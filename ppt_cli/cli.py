@@ -19,8 +19,10 @@ from .cmd_internals import (
     cmd_add_layout,
 )
 from .cmd_template import (
-    cmd_template_save, cmd_template_list, cmd_template_show,
-    cmd_template_delete, cmd_template_rename, cmd_template_default,
+    cmd_template_prepare, cmd_template_save, cmd_template_list,
+    cmd_template_show, cmd_template_delete, cmd_template_rename,
+    cmd_template_default, cmd_template_update_design_system,
+    cmd_template_export, cmd_template_import,
 )
 
 
@@ -321,11 +323,9 @@ cleanup:     delete temporary files and screenshots when you're done with them.
     s.set_defaults(func=cmd_build)
 
     # internals build-template
-    s = int_sub.add_parser("build-template", help="Build and register a template from a staged directory")
+    s = int_sub.add_parser("build-template", help="Build a template pptx into a template directory (does not register)")
     s.add_argument("staged_dir")
     s.add_argument("--name", required=True, help="Template name (kebab-case)")
-    s.add_argument("--description", help="Template description")
-    s.add_argument("-f", "--force", action="store_true", help="Overwrite existing template")
     s.set_defaults(func=cmd_build_template)
 
     # internals delete
@@ -384,18 +384,21 @@ cleanup:     delete temporary files and screenshots when you're done with them.
     s_tmpl = sub.add_parser(
         "template",
         help="Manage saved .pptx templates for reuse with 'create --template'",
-        description="Save, list, and manage named .pptx templates. Templates are "
-        "complete .pptx files stored in a platform-specific directory. Use "
-        "'ppt-cli internals' to extract and edit template XML directly.",
+        description="Two-phase workflow: 'prepare' copies the pptx and generates "
+        "screenshots, then you write a design-system.yaml, then 'save' validates "
+        "and registers. Use 'ppt-cli internals' to extract and edit template XML.",
     )
     tmpl_sub = s_tmpl.add_subparsers(dest="template_command", required=True)
 
-    # template save
-    s = tmpl_sub.add_parser("save", help="Save a .pptx as a named template")
+    # template prepare
+    s = tmpl_sub.add_parser("prepare", help="Prepare a template directory (copy pptx, generate screenshots)")
     s.add_argument("name", help="Template name (kebab-case)")
     s.add_argument("file", help="Source .pptx file")
-    s.add_argument("--description", help="Template description")
-    s.add_argument("-f", "--force", action="store_true", help="Overwrite existing")
+    s.set_defaults(func=cmd_template_prepare)
+
+    # template save
+    s = tmpl_sub.add_parser("save", help="Validate and register a prepared template")
+    s.add_argument("name", help="Template name (kebab-case)")
     s.set_defaults(func=cmd_template_save)
 
     # template list
@@ -417,7 +420,6 @@ cleanup:     delete temporary files and screenshots when you're done with them.
     s = tmpl_sub.add_parser("rename", help="Rename a template")
     s.add_argument("old", help="Current name")
     s.add_argument("new", help="New name")
-    s.add_argument("--description", help="New description")
     s.set_defaults(func=cmd_template_rename)
 
     # template default
@@ -425,6 +427,24 @@ cleanup:     delete temporary files and screenshots when you're done with them.
     s.add_argument("name", nargs="?", help="Template name to set as default")
     s.add_argument("--unset", action="store_true", help="Clear the default")
     s.set_defaults(func=cmd_template_default)
+
+    # template update-design-system
+    s = tmpl_sub.add_parser("update-design-system", help="Replace design-system.yaml for a registered template")
+    s.add_argument("name", help="Template name")
+    s.add_argument("yaml_file", help="Path to new design-system.yaml")
+    s.set_defaults(func=cmd_template_update_design_system)
+
+    # template export
+    s = tmpl_sub.add_parser("export", help="Export a template as a .zip file")
+    s.add_argument("name", help="Template name")
+    s.add_argument("-o", "--output", help="Output path (default: <name>.zip in current directory)")
+    s.set_defaults(func=cmd_template_export)
+
+    # template import
+    s = tmpl_sub.add_parser("import", help="Import a template from a .zip file")
+    s.add_argument("zip_path", help="Path to .zip file")
+    s.add_argument("name", nargs="?", help="Template name (default: from zip directory name)")
+    s.set_defaults(func=cmd_template_import)
 
     # ── setup (hidden from --help in non-TTY contexts) ──
     _setup_help = "Re-run agent skill installation" if sys.stdin.isatty() else argparse.SUPPRESS

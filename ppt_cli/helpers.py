@@ -3,6 +3,7 @@
 import json
 import os
 import re
+import subprocess
 import sys
 
 from pptx import Presentation
@@ -72,3 +73,43 @@ def _save(prs, path, output=None, extra=None):
     if extra:
         result.update(extra)
     print(json.dumps(result))
+
+
+def _is_snap_lo(lo_path):
+    """Check if LibreOffice is a snap installation."""
+    try:
+        real = os.path.realpath(
+            subprocess.run(["which", lo_path], capture_output=True,
+                           text=True).stdout.strip())
+        return "/snap/" in real or "/snap/" in subprocess.run(
+            ["which", lo_path], capture_output=True, text=True).stdout
+    except Exception:
+        return False
+
+
+def _find_libreoffice():
+    """Find a working LibreOffice binary. Returns (path, is_snap) or dies."""
+    for name in ("libreoffice", "soffice"):
+        try:
+            if subprocess.run(["which", name], capture_output=True).returncode == 0:
+                return name, _is_snap_lo(name)
+        except FileNotFoundError:
+            continue
+    mac_lo = "/Applications/LibreOffice.app/Contents/MacOS/soffice"
+    if os.path.isfile(mac_lo):
+        return mac_lo, False
+    _die("libreoffice not found, screenshotting not supported")
+
+
+def _find_libreoffice_optional():
+    """Find LibreOffice binary. Returns (path, is_snap) or (None, None)."""
+    for name in ("libreoffice", "soffice"):
+        try:
+            if subprocess.run(["which", name], capture_output=True).returncode == 0:
+                return name, _is_snap_lo(name)
+        except FileNotFoundError:
+            continue
+    mac_lo = "/Applications/LibreOffice.app/Contents/MacOS/soffice"
+    if os.path.isfile(mac_lo):
+        return mac_lo, False
+    return None, None
