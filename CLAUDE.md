@@ -43,9 +43,10 @@ ppt-cli/
 │   ├── __init__.py          # __version__ only
 │   ├── __main__.py          # venv bootstrap, calls main()
 │   ├── cli.py               # argparse setup, imports all cmd_* functions
-│   ├── helpers.py           # _die, _parse_length, _parse_color, _open, _get_slide,
-│   │                        #   _find_shape, _save + re-exports: Presentation, Inches,
-│   │                        #   Pt, Emu, RGBColor
+│   ├── helpers.py           # _die, _parse_length, _parse_color, _parse_inline_markdown,
+│   │                        #   _open, _get_slide, _find_shape, _save,
+│   │                        #   _find_libreoffice, _find_libreoffice_optional
+│   │                        #   + re-exports: Presentation, Inches, Pt, Emu, RGBColor
 │   ├── serialisation.py     # _emu_to_in, _shape_type_str, _text_frame_to_list,
 │   │                        #   _table_to_list, _shape_to_dict, _dump_slide, _peek_slide
 │   ├── cmd_create.py        # cmd_create
@@ -58,16 +59,20 @@ ppt-cli/
 │   ├── cmd_style.py         # cmd_set_font, cmd_set_fill, cmd_set_position
 │   ├── cmd_internals.py     # stage, analyze, fingerprint, build, build-template,
 │   │                        #   delete/duplicate/add for slide/layout/master
-│   ├── cmd_template.py      # save, list, show, delete, rename, default
+│   ├── cmd_template.py      # prepare, save, list, show, delete, rename, default,
+│   │                        #   update-design-system, export, import
 │   ├── staging.py           # staging dir management (hash, extract, resolve)
 │   ├── ooxml.py             # low-level OOXML: XML parse/write, .rels CRUD,
 │   │                        #   Content_Types CRUD, build, validate, prune
 │   ├── template_registry.py # platform-specific template dir, registry.json CRUD
-│   └── setup.py             # first-run setup, install.json CRUD, skill hash,
-│                            #   _check_setup (pre-command hook), cmd_setup
+│   ├── setup.py             # first-run setup, install.json CRUD, skill hash,
+│   │                        #   _check_setup (pre-command hook), cmd_setup
+│   └── skill/               # agent skill files (SKILL.md, protocol.md,
+│                            #   design-system.yaml, design palettes, image-gen.md,
+│                            #   speaker-notes.md, build-template.sh)
 ├── tests/
-│   ├── conftest.py          # cli(), tmp_pptx, deck_with_slide, staged_deck,
-│   │                        #   cli_with_template_dir
+│   ├── conftest.py          # cli(), tmp_pptx, deck_with_slide, deck_with_hidden_slide,
+│   │                        #   staged_deck, cli_with_template_dir
 │   ├── test_create.py
 │   ├── test_inspect.py
 │   ├── test_text.py
@@ -80,7 +85,7 @@ ppt-cli/
 │   ├── test_template.py
 │   └── test_setup.py
 ├── Makefile
-└── requirements.txt         # python-pptx, google-genai, Pillow, pytest
+└── requirements.txt         # python-pptx, google-genai, Pillow, PyYAML, pytest
 ```
 
 ## Architecture rules
@@ -107,7 +112,7 @@ ppt-cli/
 
 - **Black-box subprocess tests.** Every test calls the CLI as a subprocess, exactly like a user would. No internal imports in tests.
 - **Each test creates its own data.** The `cli("create", ...)` command is the starting point. No shared fixture files.
-- **`conftest.py` fixtures:** `cli(tmp_path)` returns a runner function, `tmp_pptx` gives a fresh path, `deck_with_slide` creates a deck with one Title Slide and returns `(path, slide_info)`, `staged_deck` creates and stages a deck, `cli_with_template_dir` provides a CLI runner with an isolated `PPT_CLI_TEMPLATE_DIR`.
+- **`conftest.py` fixtures:** `cli(tmp_path)` returns a runner function, `tmp_pptx` gives a fresh path, `deck_with_slide` creates a deck with one Title Slide and returns `(path, slide_info)`, `deck_with_hidden_slide` creates a deck with two slides (second hidden) and returns the path, `staged_deck` creates and stages a deck, `cli_with_template_dir` provides a CLI runner with an isolated `PPT_CLI_TEMPLATE_DIR`.
 - **Test files mirror command modules:** `test_create.py` ↔ `cmd_create.py`, etc.
 
 ## Conventions

@@ -5,7 +5,8 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ppt-cli"
 dynamic = ["version"]
-description = "CLI tool for creating and manipulating PowerPoint presentations"
+description = "PowerPoint CLI and agent skill for building pptx presentations end to end — design systems, slide composition, AI image generation, speaker scripts, and QA procedures. JSON output, stable shape IDs, scriptable workflows."
+authors = [{name = "AndreiD108"}]
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
@@ -14,7 +15,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Environment :: Console",
 ]
-dependencies = ["python-pptx", "google-genai", "Pillow"]
+dependencies = ["python-pptx", "google-genai", "Pillow", "PyYAML"]
 
 [project.scripts]
 ppt-cli = "ppt_cli.cli:main"

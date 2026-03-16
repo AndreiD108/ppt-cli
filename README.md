@@ -1,6 +1,6 @@
 # ppt-cli
 
-A command-line tool for creating, inspecting, and editing PowerPoint (.pptx) presentations. Built for AI agents — every command produces structured JSON, commands compose naturally into multi-step workflows, and a bundled agent skill provides design guidelines, image generation guidance, and workflow examples that help agents produce professional results.
+A PowerPoint CLI and agent skill for building .pptx presentations end to end. Every command produces structured JSON, shapes are addressed by stable IDs, and the bundled skill covers design systems, slide composition, AI image generation, speaker scripts, and QA — so agents go from blank deck to polished result without guesswork.
 
 ## Install
 
@@ -35,7 +35,7 @@ ppt-cli internals analyze quarterly-report.pptx    # see what's inside: layouts,
 ppt-cli internals stage quarterly-report.pptx       # extract for editing
 ppt-cli internals delete slide <dir> --slide 4      # remove content slides
 ppt-cli internals delete layout <dir> --layout "unused-thing"  # clean up dead layouts
-ppt-cli internals build-template <dir> --name=quarterly --description="Q report template"
+ppt-cli internals build-template <dir> --name=quarterly
 ```
 
 Now `ppt-cli create new-report.pptx --template quarterly` starts from that clean foundation.
@@ -90,8 +90,8 @@ ppt-cli peek deck.pptx --all    # verify the changes look right
 | `set-font` | Set font properties (bold, italic, size, color, family) |
 | `set-fill` | Set shape fill color |
 | `set-position` | Move or resize a shape |
-| `internals` | Low-level OOXML: stage, analyze, fingerprint, build, mutate |
-| `template` | Save, list, show, delete, rename, set default |
+| `internals` | Low-level OOXML: stage, analyze, fingerprint, build, build-template, delete, duplicate, add |
+| `template` | Prepare, save, list, show, delete, rename, default, update-design-system, export, import |
 
 All commands produce JSON output. Slides are 1-based. Shapes are addressed by `--shape-id`. Lengths accept units: `1in`, `2.5cm`, `72pt`, `100px`, `914400emu` (default: inches). Colors are `#RRGGBB`.
 
@@ -102,6 +102,13 @@ Run `ppt-cli <command> --help` for full usage of any command.
 - **Python 3.10+**
 - **GEMINI_API_KEY** environment variable — required only for AI image generation (`add-image --prompt` and `image-gen`). Get one at [Google AI Studio](https://aistudio.google.com/api-keys) or [Google Cloud Console](https://console.cloud.google.com/apis/credentials).
 - **LibreOffice** and **poppler-utils** (`pdftoppm`) — required only for the `screenshot` command.
+
+## What it doesn't cover
+
+- Animations, transitions, and embedded audio/video
+- Chart creation or editing (charts are detected by `dump`/`peek` but can't be created or modified)
+- SmartArt manipulation
+- Legacy `.ppt` format — only `.pptx` (Office Open XML)
 
 ## Disclaimer
 
