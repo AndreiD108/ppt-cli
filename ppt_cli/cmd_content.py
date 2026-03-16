@@ -46,6 +46,28 @@ def _crop_to_ratio(image_source, target_w_emu, target_h_emu):
     return buf
 
 
+def _fit_dimensions(image_source, target_w_emu, target_h_emu):
+    """Compute dimensions to fit image within bounds preserving aspect ratio.
+    Returns (fitted_w_emu, fitted_h_emu)."""
+    from PIL import Image
+
+    img = Image.open(image_source)
+    img_w, img_h = img.size
+
+    if hasattr(image_source, "seek"):
+        image_source.seek(0)
+
+    img_ratio = img_w / img_h
+    target_ratio = target_w_emu / target_h_emu
+
+    if img_ratio > target_ratio:
+        # Image is wider than target — width constrains
+        return target_w_emu, int(target_w_emu / img_ratio)
+    else:
+        # Image is taller than target — height constrains
+        return int(target_h_emu * img_ratio), target_h_emu
+
+
 def _guess_ratio(w_emu, h_emu):
     """Pick the closest supported aspect ratio if within 15% relative error."""
     if not w_emu or not h_emu:
@@ -125,7 +147,13 @@ def cmd_add_image(args):
         )
 
         if w and h:
-            buf = _crop_to_ratio(buf, w, h)
+            if w == prs.slide_width or h == prs.slide_height:
+                buf = _crop_to_ratio(buf, w, h)
+            else:
+                fit_w, fit_h = _fit_dimensions(buf, w, h)
+                x += (w - fit_w) // 2
+                y += (h - fit_h) // 2
+                w, h = fit_w, fit_h
         kwargs = {"image_file": buf, "left": x, "top": y}
         if w:
             kwargs["width"] = w
@@ -145,7 +173,13 @@ def cmd_add_image(args):
 
         img_source = image
         if w and h:
-            img_source = _crop_to_ratio(image, w, h)
+            if w == prs.slide_width or h == prs.slide_height:
+                img_source = _crop_to_ratio(image, w, h)
+            else:
+                fit_w, fit_h = _fit_dimensions(image, w, h)
+                x += (w - fit_w) // 2
+                y += (h - fit_h) // 2
+                w, h = fit_w, fit_h
         kwargs = {"image_file": img_source, "left": x, "top": y}
         if w:
             kwargs["width"] = w
