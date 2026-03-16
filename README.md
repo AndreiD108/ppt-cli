@@ -68,7 +68,7 @@ ppt-cli peek deck.pptx --all    # verify the changes look right
 
 | | |
 |---|---|
-| `create` | Create a new .pptx (blank, widescreen, or from template) |
+| `create` | Create a new .pptx (16:9 default, --legacy for 4:3, or from template) |
 | `info` | Deck metadata — slide count, dimensions, available layouts |
 | `list` | List slides with titles and shape counts |
 | `dump` | Full JSON dump of slide shapes, positions, text, styles |

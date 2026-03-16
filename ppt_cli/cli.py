@@ -52,7 +52,7 @@ cleanup:     delete temporary files and screenshots when you're done with them.
     s.add_argument("file")
     s.add_argument("--width", help="Slide width (e.g. 10in)")
     s.add_argument("--height", help="Slide height (e.g. 7.5in)")
-    s.add_argument("--widescreen", action="store_true", help="Use 16:9 widescreen (13.333x7.5in)")
+    s.add_argument("--legacy", action="store_true", help="Use 4:3 legacy aspect ratio (10x7.5in) instead of default 16:9")
     s.add_argument("--template", help="Template name or .pptx path")
     s.add_argument("--force", action="store_true", help="Overwrite existing file")
     s.set_defaults(func=cmd_create)

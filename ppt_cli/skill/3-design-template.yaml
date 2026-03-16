@@ -1,0 +1,47 @@
+template_analysis:
+  procedure:
+    - internals_analyze: "layouts, masters, media"
+    - internals_fingerprint: "shape pos/sizes/fills per slide"
+    - peek_all: "text, font sizes, shape types"
+    - screenshot_all: "visual ref"
+
+  extract:
+    palette:
+      method: "fingerprint fills + font colors"
+      output: "role-hex map like dir palettes"
+      # Map to roles (primary/secondary/accent/heading/body/muted).
+      # >6 colors: group by freq+visual role.
+
+    typography:
+      method: "peek + dump (fonts, sizes per shape type)"
+      output: "hierarchy matching universal typography"
+
+    motif:
+      method: "fingerprint (textless shapes repeating across slides)"
+      output: "principle + manifestations"
+      # Recurring non-content: accent bars, fills, containers, borders, logo.
+
+    layout_patterns:
+      method: "fingerprint + analyze (layout assignments)"
+      output: "pattern -> layout + shape arrangement"
+
+    spacing:
+      method: "fingerprint (min x/y content shapes; inter-shape gaps)"
+      output: "margin + gap vals"
+
+    background:
+      method: "fingerprint (full-slide bg fills)"
+      output: "strategy + colors for structural vs content"
+
+  when_incomplete:
+    extend: conservative
+    # May not cover all types. New layouts use derived palette/fonts/spacing/motif.
+    # Plain-but-consistent > polished-but-foreign.
+    # Clear dir affinity (dark+mono=technical): note but don't load dir.
+
+  when_ambiguous:
+    resolve: dominant_pattern
+    # Inconsistency WITHIN tmpl (diff fonts same role, clashing colors).
+    # When tmpl consistently violates universals (centered body), FOLLOW
+    # TEMPLATE — authority, intentional branding.
+    # Pick dominant (most freq), normalize. Flag at K/F lvls.

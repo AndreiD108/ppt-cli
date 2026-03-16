@@ -136,7 +136,7 @@ def test_create_with_template_name(cli_with_template_dir, tmp_path):
 
     # Create and save a template
     src = str(tmp_path / "tmpl-source.pptx")
-    cli("create", src, "--widescreen")
+    cli("create", src)
     cli("template", "save", "wide-tmpl", src)
 
     # Create from template
@@ -154,7 +154,7 @@ def test_create_with_template_file(cli_with_template_dir, tmp_path):
 
     # Create a source template file
     src = str(tmp_path / "my-template.pptx")
-    cli("create", src, "--widescreen")
+    cli("create", src)
 
     # Create from file path
     deck = str(tmp_path / "from-file.pptx")
@@ -169,7 +169,7 @@ def test_create_with_default_template(cli_with_template_dir, tmp_path):
     cli, _ = cli_with_template_dir
 
     src = str(tmp_path / "default-src.pptx")
-    cli("create", src, "--widescreen")
+    cli("create", src)
     cli("template", "save", "auto-tmpl", src)
     cli("template", "default", "auto-tmpl")
 

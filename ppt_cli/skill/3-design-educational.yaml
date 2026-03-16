@@ -1,0 +1,119 @@
+character:
+  [warm, approachable, low_tension, moderate_saturation]
+
+  # Contrast sandwich. dark: title/dividers. light: content.
+examples:
+  teal_warm_gray:
+    # Corporate training, onboarding.
+    dark: { bg: "#028090", head: "#FFFFFF", body: "#B0D8DC", muted: "#7ABCC4" }
+    light: { bg: "#F2F2F2", head: "#1A3A40", body: "#4A4A4A", muted: "#8A8A8A" }
+    accent: "#F96167"
+    fonts: [Trebuchet MS, Verdana]
+  soft_blue_cream:
+    # Workshops, tutorials. Cream reduces strain.
+    dark: { bg: "#4A90B8", head: "#FFFFFF", body: "#B8D4E8", muted: "#80B0CC" }
+    light: { bg: "#FAF7F0", head: "#1E3A50", body: "#4A4A4A", muted: "#8A8A8A" }
+    accent: "#E8734A"
+    fonts: [Trebuchet MS, Calibri]
+  sage_slate:
+    # Calm, long sessions, resists fatigue.
+    dark: { bg: "#6B9080", head: "#FFFFFF", body: "#B8D0C4", muted: "#90B0A0" }
+    light: { bg: "#F5F5F0", head: "#2A3E34", body: "#4A4A4A", muted: "#8A8A8A" }
+    accent: "#C05746"
+    fonts: [Georgia, Calibri]
+  plum_sand:
+    # Academic, specialized. Purple carries personality.
+    dark: { bg: "#7B5EA7", head: "#FFFFFF", body: "#C4B0DA", muted: "#A090BC" }
+    light: { bg: "#F0EDE5", head: "#3A2E50", body: "#4A4A4A", muted: "#8A8A8A" }
+    accent: "#DE5976"
+    fonts: [Georgia, Calibri]
+
+typography:
+  # Friendly sans headers. Body readable 14-16pt (more text than other dirs).
+  preferred_pairings:
+    - [Trebuchet MS, Calibri] # friendly; default
+    - [Trebuchet MS, Verdana] # warmer; long sessions
+    - [Calibri, Calibri Light] # neutral; complex content
+    - [Georgia, Calibri] # warm serif; humanities
+    - [Arial Black, Arial] # direct; technical training
+  avoid: [Impact, Palatino, Garamond, Consolas]
+  # Impact=aggressive. Palatino/Garamond=editorial. Consolas=unless programming.
+
+  sizes:
+    slide_title: "36-38pt" # lower; room for content
+    body: "15-16pt" # OVERRIDE up; more text/slide
+    section_header: "20-24pt"
+    # Section headers = nav aids. Don't skip. Scannable chunks.
+
+background:
+  # OVERRIDE: contrast sandwich.
+  # Content: light (white or faint tint 5-10%). Warm palette -> cream not pure white.
+  # Title+dividers: primary fill, white text. Color shift = "new topic."
+  preferred: contrast_sandwich
+  structural_slides: dark
+  content_slides: light
+
+layout:
+  primary: [icon_text_rows, timeline, two_column, grid, callout_takeaway]
+  # icon_text_rows: WORKHORSE. 3-4 items, icon+label+desc. Discrete chunks.
+  # timeline: steps/phases/procedures. Each visually distinct.
+  # two_column: concept+example, theory+practice. Img explanatory not decorative.
+  # grid: categorizations, comparisons. Identical cell struct.
+  # callout_takeaway: defs, rules, formulas, principles.
+  sparingly: [full_bleed_bg, stat_callout, asymmetric]
+  # full_bleed: only when visual IS info. Atmospheric wastes learning space.
+  # stat_callout: num w/o context doesn't teach. Needs expl.
+  # asymmetric: unpredictable, cognitive load.
+
+variation:
+  # OVERRIDE: relax consecutive_repeat.
+  consecutive_repeat: allowed_within_sections
+  # 3 icon+text in row = FEATURE — pattern learned on #1, #2-3 faster.
+  # Vary btwn SECTIONS not slides. Variety at section lvl.
+
+density:
+  # OVERRIDE: more text IF well-structured.
+  # 80 words w/ bold labels+hierarchy=fine. 80 words one paragraph=not.
+  title: "1-2 lines"
+  content: "≤5 items/slide (vs 3 business)"
+  split_threshold: ">4 blocks = split"
+  # More slides less content > fewer packed. Transition=processing pause.
+  speaker_notes: essential
+  # Slides=struct+points. Notes=full expl/examples/transitions.
+
+motif:
+  principle: structured_and_signposted
+  # Recurring elems help navigate: where, what kind, what to attend.
+  recommended:
+    progress_indicators:
+      # Section num/bar consistent pos every slide. Most powerful edu motif.
+      coverage: high
+    callout_boxes:
+      # Colored container for takeaways/defs. Shape = "remember this" signal.
+      coverage: content_dependent
+    numbered_labels:
+      # Num in filled circle. Steps, sections, items. Ordered struct.
+      coverage: content_dependent
+    icon_consistency:
+      # All same style (line-art/filled/circles), same size 0.4-0.6in.
+      rule: uniform_style_within_deck
+
+image_style:
+  principle: explanatory_not_atmospheric
+  # Every img explains something. No explain = no belong.
+  preferences:
+    - illustrations_diagrams: "flat vector, isometric, schematic > photo"
+    - icons_as_shorthand: "consistent, 0.4-0.6in, visual labels"
+    - annotated_screenshots: "tools/procedures; arrows, nums, highlights"
+    - generated_diagrams: "complex processes; spatial org+labels"
+    - charts_that_teach: "accent on outlier + callout label"
+  # Photo only for real context (env/equipment/people). Generic=too vague.
+  prompt_style: "specify informational intent"
+
+anti_patterns: # ADD
+  - all_dark_backgrounds: "light thruout; dark only title+dividers"
+  - layout_variety_every_slide: "vary btwn sections not slides"
+  - atmospheric_full_bleeds: "only when visual IS info"
+  - minimal_text_heavy_visual: "structured text w/ bold labels; ref artifacts"
+  - stat_callouts_as_primary: "nums need expl+context+relationship"
+  - decorative_non_structural: "every elem signals struct or communicates"

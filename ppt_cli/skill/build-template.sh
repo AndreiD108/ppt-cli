@@ -1,6 +1,204 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# ── COMMAND COMPOSITION PATTERNS ────────────────────────────────────────
+# Read these before writing slide functions. Patterns are organized by
+# use case, not by design direction — use whichever ones the slide needs.
+# Direction affinity is noted in parentheses where a pattern is
+# predominantly used in one direction, but any pattern can appear anywhere.
+#
+# ─────────────────────────── LAYOUT & BACKGROUND ───────────────────────
+#
+# @pattern dark-background
+#   # Full-slide background fill. Add FIRST so content layers on top.
+#   SID=$(shape_id ppt-cli add-textbox "$PPTX" N "" \
+#     --x 0in --y 0in --w 13.333in --h 7.5in)
+#   ppt-cli set-fill "$PPTX" N --shape-id "$SID" --color "$DARK_BG"
+#   # Then add content shapes — they layer on top automatically.
+#   # Remember to use light font colors on dark backgrounds.
+#
+# @pattern semi-transparent-overlay (creative)
+#   # No opacity control in ppt-cli. Two alternatives:
+#   # 1. Generate image with natural dark region (prompt: "dark gradient
+#   #    fading to black on the left third") and place text in that area.
+#   # 2. Add a narrow colored bar as a text backing:
+#   SID=$(shape_id ppt-cli add-textbox "$PPTX" N "" \
+#     --x 0in --y 5in --w 13.333in --h 2.5in)
+#   ppt-cli set-fill "$PPTX" N --shape-id "$SID" --color "$DARK_BG"
+#   # Then place text on top of the bar.
+#
+# ─────────────────────────── IMAGE PLACEMENT ───────────────────────────
+#
+# @pattern full-bleed-image
+#   # Image fills entire slide. Add BEFORE text shapes (layer order).
+#   ppt-cli add-image "$PPTX" N --prompt "..." --resolution 2k --ratio 16:9 \
+#     --x 0in --y 0in --w 13.333in --h 7.5in
+#   # MUST specify negative space in prompt when text will overlay.
+#   SID=$(shape_id ppt-cli add-textbox "$PPTX" N "TITLE" \
+#     --x 0.5in --y 5.5in --w 8in --h 1.5in)
+#   ppt-cli set-font "$PPTX" N --shape-id "$SID" --color '#FFFFFF' --bold --size 44
+#
+# @pattern half-bleed-image (left or right)
+#   # Image fills one half; content in the other half.
+#   # Left image:
+#   ppt-cli add-image "$PPTX" N --prompt "..." --resolution 2k \
+#     --x 0in --y 0in --w 6.666in --h 7.5in
+#   SID=$(shape_id ppt-cli add-textbox "$PPTX" N "$CONTENT" \
+#     --x 7.2in --y 1.2in --w 5.5in --h 5.5in)
+#   # Right image: swap x coordinates (content at 0.5in, image at 6.666in).
+#
+# @pattern two-column-text-image
+#   ppt-cli add-textbox "$PPTX" N "$TEXT" \
+#     --x 0.5in --y 1.2in --w 5.5in --h 5.5in
+#   ppt-cli add-image "$PPTX" N --prompt "..." \
+#     --x 6.5in --y 0.5in --w 6.333in --h 6.5in
+#
+# ─────────────────────────── DECORATIVE ELEMENTS ───────────────────────
+#
+# @pattern accent-bar (business, technical)
+#   # Thin vertical or horizontal divider — accent-colored empty textbox.
+#   # Vertical (side border on a card or section):
+#   SID=$(shape_id ppt-cli add-textbox "$PPTX" N "" \
+#     --x 0.5in --y 1in --w 0.08in --h 5.5in)
+#   ppt-cli set-fill "$PPTX" N --shape-id "$SID" --color "$ACCENT"
+#   # Horizontal (top/bottom edge of slide — high-coverage anchor motif):
+#   SID=$(shape_id ppt-cli add-textbox "$PPTX" N "" \
+#     --x 0in --y 7.35in --w 13.333in --h 0.15in)
+#   ppt-cli set-fill "$PPTX" N --shape-id "$SID" --color "$ACCENT"
+#
+# @pattern logo-every-slide
+#   # Add last on each slide so it layers on top.
+#   # Use identical coordinates on every slide for consistency.
+#   ppt-cli add-image "$PPTX" N logo.png \
+#     --x 11.8in --y 6.9in --w 1in --h 0.5in
+#
+# ─────────────────────────── DATA & STATS ──────────────────────────────
+#
+# @pattern stat-callout (3 across)
+#   for i in 0 1 2; do
+#     x=$(echo "0.5 + $i * 4.1" | bc)
+#     SID=$(shape_id ppt-cli add-textbox "$PPTX" N "$NUMBER" \
+#       --x "${x}in" --y 2.5in --w 3.8in --h 1.5in)
+#     ppt-cli set-font "$PPTX" N --shape-id "$SID" \
+#       --size 66 --bold --color "$ACCENT"
+#     # Label directly below the number:
+#     LID=$(shape_id ppt-cli add-textbox "$PPTX" N "$LABEL" \
+#       --x "${x}in" --y 4in --w 3.8in --h 0.5in)
+#     ppt-cli set-font "$PPTX" N --shape-id "$LID" \
+#       --size 14 --color "$MUTED"
+#   done
+#
+# @pattern oversized-stat-number (creative)
+#   # The number IS the visual element — no image needed.
+#   SID=$(shape_id ppt-cli add-textbox "$PPTX" N "$NUMBER" \
+#     --x 1in --y 1.5in --w 6in --h 3in)
+#   ppt-cli set-font "$PPTX" N --shape-id "$SID" \
+#     --size 90 --bold --color "$ACCENT"
+#   # Small label below:
+#   LID=$(shape_id ppt-cli add-textbox "$PPTX" N "$LABEL" \
+#     --x 1in --y 4.5in --w 6in --h 0.5in)
+#   ppt-cli set-font "$PPTX" N --shape-id "$LID" \
+#     --size 13 --color "$MUTED"
+#
+# ─────────────────────────── CONTAINERS & CODE ─────────────────────────
+#
+# @pattern code-container (technical)
+#   # Outer container: slightly larger, dark fill for padding effect.
+#   BG=$(shape_id ppt-cli add-textbox "$PPTX" N "" \
+#     --x 0.4in --y 1.4in --w 5.7in --h 3.2in)
+#   ppt-cli set-fill "$PPTX" N --shape-id "$BG" --color "$CARD_BG"
+#   # Inner content: monospace font, light text.
+#   SID=$(shape_id ppt-cli add-textbox "$PPTX" N "$CODE" \
+#     --x 0.6in --y 1.6in --w 5.3in --h 2.8in)
+#   ppt-cli set-font "$PPTX" N --shape-id "$SID" \
+#     --name Consolas --color "$TEXT_LIGHT" --size 13
+#
+# @pattern colored-callout-box (educational)
+#   # Background container for key takeaways / definitions.
+#   BG=$(shape_id ppt-cli add-textbox "$PPTX" N "" \
+#     --x 0.5in --y 5in --w 9in --h 1.2in)
+#   ppt-cli set-fill "$PPTX" N --shape-id "$BG" --color "$ACCENT_TINT"
+#   SID=$(shape_id ppt-cli add-textbox "$PPTX" N "$TAKEAWAY" \
+#     --x 0.7in --y 5.1in --w 8.6in --h 1in)
+#   ppt-cli set-font "$PPTX" N --shape-id "$SID" --size 14 --bold
+#
+# @pattern diagram-nodes (technical)
+#   # Build simple diagrams from positioned textboxes.
+#   # Each node: textbox with label + fill.
+#   NODE=$(shape_id ppt-cli add-textbox "$PPTX" N "$LABEL" \
+#     --x 1in --y 2in --w 2in --h 0.6in)
+#   ppt-cli set-fill "$PPTX" N --shape-id "$NODE" --color "$CARD_BG"
+#   ppt-cli set-font "$PPTX" N --shape-id "$NODE" \
+#     --size 12 --color "$TEXT_LIGHT" --bold
+#   # Connecting lines: thin empty textboxes filled with accent color.
+#   LINE=$(shape_id ppt-cli add-textbox "$PPTX" N "" \
+#     --x 3in --y 2.25in --w 1in --h 0.04in)
+#   ppt-cli set-fill "$PPTX" N --shape-id "$LINE" --color "$ACCENT"
+#
+# ─────────────────────────── NAVIGATION & STRUCTURE ────────────────────
+#
+# @pattern progress-indicator (educational)
+#   # Consistent corner position on every slide. Same x/y each time.
+#   SID=$(shape_id ppt-cli add-textbox "$PPTX" N "Section $SEC of $TOTAL" \
+#     --x 11in --y 7in --w 2in --h 0.3in)
+#   ppt-cli set-font "$PPTX" N --shape-id "$SID" \
+#     --size 10 --color "$MUTED"
+#
+# @pattern numbered-step-marker (educational)
+#   # Colored square with number — acts as a step indicator.
+#   BG=$(shape_id ppt-cli add-textbox "$PPTX" N "" \
+#     --x 0.5in --y 1.5in --w 0.4in --h 0.4in)
+#   ppt-cli set-fill "$PPTX" N --shape-id "$BG" --color "$PRIMARY"
+#   SID=$(shape_id ppt-cli add-textbox "$PPTX" N "$STEP_NUM" \
+#     --x 0.5in --y 1.5in --w 0.4in --h 0.4in)
+#   ppt-cli set-font "$PPTX" N --shape-id "$SID" \
+#     --size 16 --bold --color '#FFFFFF'
+#
+# ─────────────────────────── CREATIVE TYPOGRAPHY ───────────────────────
+#
+# @pattern asymmetric-text (creative)
+#   # Large left margin for visual tension. Title does NOT start at 0.5in.
+#   SID=$(shape_id ppt-cli add-textbox "$PPTX" N "$TITLE" \
+#     --x 3in --y 2.5in --w 9.5in --h 1.5in)
+#   ppt-cli set-font "$PPTX" N --shape-id "$SID" \
+#     --size 48 --bold --color '#FFFFFF'
+#
+# ─────────────────────────── TEMPLATE & STYLING ────────────────────────
+#
+# @pattern build-from-template
+#   # Create deck from a saved template, then fill placeholders.
+#   # ppt-cli create "$PPTX" --template "$TEMPLATE_NAME"
+#   # ppt-cli add-slide "$PPTX" --layout "Title Slide"
+#   # ppt-cli set-title "$PPTX" 1 "Slide Title"
+#   # ppt-cli add-slide "$PPTX" --layout "bg_white"
+#   # ppt-cli set-text "$PPTX" 2 --shape-id <placeholder_id> "Body content"
+#   # ppt-cli add-image "$PPTX" 2 chart.png --x 1in --y 2in --w 8in
+#   # ppt-cli add-table "$PPTX" 3 data.csv --x 1in --y 1.5in
+#   # ppt-cli set-notes "$PPTX" 1 "Speaker notes"
+#
+# @pattern template-layout-slide
+#   # For slides using a branded template layout with placeholders:
+#   # Only delete freehand shapes; PRESERVE placeholder shapes.
+#   for sid in $(ppt-cli dump "$PPTX" N 2>/dev/null \
+#     | python3 -c "import sys,json
+#   for s in json.load(sys.stdin).get('shapes',[]):
+#       if 'placeholder_idx' not in s: print(s['id'])" 2>/dev/null); do
+#     ppt-cli delete-shape "$PPTX" N --shape-id "$sid" > /dev/null
+#   done
+#   ppt-cli set-title "$PPTX" N "Slide Title"
+#   ppt-cli set-text "$PPTX" N --shape-id <body_placeholder_id> "Body content"
+#   # Add freehand shapes only for elements the layout doesn't provide.
+#
+# @pattern fine-tune-styling
+#   # Post-build styling adjustments — font, fill, position.
+#   ppt-cli set-font "$PPTX" N --shape-id "$SID" \
+#     --bold --size 28 --color "$ACCENT"
+#   ppt-cli set-fill "$PPTX" N --shape-id "$SID" --color "$CARD_BG"
+#   ppt-cli set-position "$PPTX" N --shape-id "$SID" \
+#     --x 2in --y 1in --w 6in
+#
+# ────────────────────────────────────────────────────────────────────────
+
 # ── ppt-cli build script ──────────────────────────────────────────────
 # Generated from a presentation build plan. Each slide is a function;
 # run all slides or specific ones by number.

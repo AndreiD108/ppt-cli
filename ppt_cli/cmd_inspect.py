@@ -244,19 +244,23 @@ def cmd_screenshot(args):
                 abs_output = os.path.abspath(f"{base}{ext}")
             else:
                 abs_output = os.path.abspath(f"{base}_{slide_num}{ext}")
+            os.makedirs(os.path.dirname(abs_output), exist_ok=True)
         else:
             os.makedirs(default_dir, exist_ok=True)
             abs_output = os.path.join(default_dir, f"slide_{slide_num}.png")
 
         out_stem = os.path.splitext(abs_output)[0]
-        r = subprocess.run(
-            ["pdftoppm", "-png", "-singlefile",
-             "-f", str(slide_num), "-l", str(slide_num),
-             "-r", str(dpi), pdf_path, out_stem],
-            capture_output=True,
-        )
+        try:
+            r = subprocess.run(
+                ["pdftoppm", "-png", "-singlefile",
+                 "-f", str(slide_num), "-l", str(slide_num),
+                 "-r", str(dpi), pdf_path, out_stem],
+                capture_output=True,
+            )
+        except FileNotFoundError:
+            _die("pdftoppm not found (install poppler-utils)")
         if r.returncode != 0:
-            _die(f"pdftoppm failed (install poppler-utils): {r.stderr.decode()}")
+            _die(f"pdftoppm failed: {r.stderr.decode().strip()}")
         outputs.append({"slide": slide_num, "output": abs_output})
 
     if len(outputs) == 1:

@@ -1,0 +1,218 @@
+palette:
+  # OVERRIDE: muted, authoritative, low-risk. Cool-leaning (navy, charcoal, slate,
+  # deep teal); warm neutrals (taupe, warm gray) when subject warrants.
+  # Saturation moderate-to-low. Nothing screams.
+  # Accent earns specificity — navy+white is generic; navy+white+teal feels chosen.
+  character: [muted, authoritative, restrained, low_saturation]
+
+  brand_colors:
+    # In business contexts the user's company often has existing brand colors.
+    # Ask before building a palette — brand guidelines override direction palettes.
+    # Agent's job becomes fitting brand colors into the dominance hierarchy,
+    # not choosing new ones.
+    ask_first: true
+
+  # Palette examples use the contrast sandwich: dark structural slides, light
+  # content slides. Every example includes the full role set needed to build
+  # correct slides for both contexts.
+  # These are examples of the KIND of palette to build, not a fixed menu.
+  # The right palette depends on the specific company, topic, and audience.
+  # What unites them: muted primaries, high-contrast secondary for content areas,
+  # and a single accent used sparingly.
+  examples:
+    midnight_executive:
+      # The classic boardroom palette. Serious and formal. Gravitas.
+      # Good for financial reports, board decks, investor updates.
+      dark:
+        { bg: "#1E2761", head: "#FFFFFF", body: "#C0CBE0", muted: "#8494B8" }
+      light:
+        { bg: "#F2F5FA", head: "#1E2761", body: "#4A5270", muted: "#8494B8" }
+      accent: "#7896BB"
+      fonts: [Georgia, Calibri]
+    charcoal_minimal:
+      # Neutral and recessive. Lets data do the talking.
+      # Good when content is dense and palette should not compete.
+      dark:
+        { bg: "#36454F", head: "#F0F0F0", body: "#B0BCC4", muted: "#7E8E98" }
+      light:
+        { bg: "#F5F5F5", head: "#36454F", body: "#5A6A72", muted: "#8E9AA2" }
+      accent: "#6E8898"
+      fonts: [Arial Black, Arial]
+    teal_trust:
+      # Modern without being informal. SaaS, healthcare, sustainability.
+      dark:
+        { bg: "#004D5C", head: "#FFFFFF", body: "#A0C4C8", muted: "#6A9CA2" }
+      light:
+        { bg: "#F0F8F7", head: "#004D5C", body: "#3A7078", muted: "#6A9CA2" }
+      accent: "#5AAE96"
+      fonts: [Calibri, Calibri Light]
+    ocean_gradient:
+      # Monochromatic depth. All blues, enough value contrast for hierarchy.
+      # Polished and deliberate.
+      dark:
+        { bg: "#0C2340", head: "#FFFFFF", body: "#9CB0C8", muted: "#6A82A0" }
+      light:
+        { bg: "#F0F4F8", head: "#0C2340", body: "#3A5068", muted: "#6A82A0" }
+      accent: "#2E86C1"
+      fonts: [Georgia, Calibri]
+    warm_slate:
+      # Warmer alternative. Approachable without sacrificing professionalism.
+      # Copper accent adds warmth without informality.
+      dark:
+        { bg: "#4A4A4A", head: "#F5F0EB", body: "#C4BAB0", muted: "#958C82" }
+      light:
+        { bg: "#F5F0EB", head: "#4A4A4A", body: "#6B6058", muted: "#958C82" }
+      accent: "#C47B5A"
+      fonts: [Cambria, Calibri]
+
+typography:
+  # OVERRIDE: header signals competence, not playfulness. Body purely functional.
+  # If the audience notices the typeface, it is the wrong typeface.
+  font_pairings:
+    - {
+        header: Georgia,
+        body: Calibri,
+        when: "formal — financial reports, board decks, investor updates",
+      }
+    - {
+        header: Cambria,
+        body: Calibri,
+        when: "traditional/institutional — banks, law firms, enterprises",
+      }
+    - {
+        header: Arial Black,
+        body: Arial,
+        when: "no-nonsense data-driven — transparent typography",
+      }
+    - {
+        header: Calibri,
+        body: Calibri Light,
+        when: "modern minimal — tech companies, contemporary internal comms",
+      }
+  avoid_fonts: [Impact, Trebuchet MS, display_fonts, decorative_fonts]
+  # Impact = aggressive (posters, not board decks). Trebuchet MS = casual
+  # (fine for educational, wrong here). Decorative draws attention to itself.
+
+  sizes:
+    # OVERRIDE: use tighter end of universal ranges. Precision over expression.
+    slide_title: { pt: "36-40" } # rarely above 40 — oversized feels like marketing
+    body: { pt: "14-15" } # compact enough for data-dense slides
+    stat_callout: { pt: "60-66" } # large enough to be visual, not decorative
+    caption: { pt: "10-11", color: muted } # present but unobtrusive
+
+background:
+  # OVERRIDE: contrast sandwich is the natural fit.
+  preferred: contrast_sandwich
+  # Dark for title/section dividers/conclusion; light for content slides.
+  # Creates visual rhythm — dark = structure, light = content.
+  # On dark slides: white or very light text. On light slides: dark text
+  # (near-black or primary at high value). Contrast must be unambiguous.
+  alternatives:
+    all_light: "acceptable — especially for shorter decks or internal docs where dark bookends feel excessive"
+    all_dark: "uncommon in business — feels more keynote/pitch; use only if audience and setting warrant it"
+
+layout:
+  primary: [stat_callout, comparison_cols, two_column, grid]
+  # stat_callout: THE signature business layout. 2-3 large numbers + short labels.
+  #   Financial results, KPIs, growth metrics — never buried in tables or paragraphs.
+  # comparison_cols: side-by-side for before/after, plan vs actual, Q1 vs Q2.
+  #   Consistent internal structure across columns for horizontal scanning.
+  # two_column: narrative left, supporting data/chart right. Default for
+  #   slides needing both explanation and evidence.
+  # grid (2x2): four content blocks. Team updates, department summaries,
+  #   strategic pillars.
+  supporting: [section_divider, timeline, quote]
+  # section_divider: dark bg, section title, optional number. Keeps audience
+  #   oriented in longer decks (10+ slides).
+  # timeline: horizontal or vertical numbered steps. Roadmaps, milestones,
+  #   implementation plans.
+  # quote: sparingly — key exec quote, customer testimonial, strategic statement.
+  rarely: [full_bleed_bg, half_bleed]
+  # full_bleed_bg: uncommon. If used, title slide only. Content slides should
+  #   not have photographic backgrounds — they compete with data.
+  # half_bleed: occasionally for case studies or team slides. Not primary.
+  avoid: [asymmetric]
+  # Asymmetry reads as creative/informal. Business audiences expect predictable structure.
+
+motif:
+  # OVERRIDE: subtle and high-coverage. Audience perceives consistency without
+  # being able to point to a specific decorative element.
+  preferred_principles: [sharp_geometric, bold_color_blocks]
+  # sharp_geometric: rectangular cards, hard corners, thin accent bars, square
+  #   image crops. Clean, precise, corporate. Natural fit for data-heavy decks.
+  # bold_color_blocks: filled rects as section backgrounds, solid color bars
+  #   for headers, content inside colored containers. Strong visual structure
+  #   without needing imagery.
+  high_coverage_anchors:
+    - "company logo (or generated brand mark) bottom-right or bottom-left on every slide"
+    - "thin accent-colored bar along top or bottom edge of every content slide"
+    - "consistent header treatment — dark-filled rect behind title, or title always in same position with same background element"
+  character: "geometric and precise — sharp corners, straight lines, rectangular containers"
+  # Rounded shapes not off-limits but deliberate, not default.
+  # Decorative illustrations and heavy border treatments out of place.
+  # Motif should feel systematic, not designed.
+
+density:
+  # OVERRIDE: carries more info per slide than creative/educational, but
+  # density must be organized, not dumped.
+  one_main_point: true
+  # Even on data-dense slides, a clear takeaway. If 3 metrics, title or
+  # visual cue indicates which one matters most.
+  favor_numbers: true
+  # Replace descriptive text with data. "$18.2M (+24%)" > "Revenue grew significantly."
+  # Business audiences trust numbers.
+  exec_summary:
+    when: "decks longer than 8-10 slides"
+    content: "3-5 key takeaways near the front"
+    # Respects audience time; gives conclusion before evidence.
+  speaker_notes: "carry the narrative — slides present data, speaker interprets"
+  tables:
+    # OVERRIDE: more acceptable than other directions. Genuinely tabular data
+    # (budget breakdowns, project status grids, quarterly comparisons) warrants tables.
+    # For 2-4 data points, stat callouts still better.
+    acceptable_when: "genuinely tabular — multiple rows AND columns for cross-reference"
+
+image_style:
+  usage: sparingly
+  # Images are supporting, never the focal point of a content slide.
+  when_to_use:
+    - "title slide backgrounds (subtle, dark, blurred or abstract — not busy)"
+    - "team/people slides (headshots, group photos)"
+    - "case studies (product photos, client logos)"
+    - "charts and data visualizations"
+  when_not_to_use:
+    - "data slides — decorative imagery alongside real data is redundant"
+    # Exception: AI-generated chart images CAN replace shape-based charts
+    # for complex visualizations (multi-variable comparisons, dense trends)
+    # when they produce cleaner results. The chart IS the visualization, not decoration.
+    - "process slides — shapes and text communicate sequence better"
+    - "any slide where the image would be purely decorative with no informational value"
+  character: "clean, professional, desaturated, editorially quiet"
+  # Keep subjects generic enough to feel universal.
+  # Abstract/geometric backgrounds work well for title/section slides.
+  # Muted desaturated tones that complement palette, not compete.
+
+  shared_style_fragments:
+    # Establish a narrative style fragment tied to palette, reuse across ALL prompts.
+    # The fragment reads as narrative description (lighting, color grading, composition),
+    # not a list of keywords.
+    midnight_executive: "desaturated editorial photography, three-point softbox lighting, shallow depth of field, cool blue-gray color grading with dominant tones coordinated to navy #1E2761 and steel blue #7896BB, clean composition with generous negative space"
+    warm_slate: "professional photography, soft diffused natural window lighting, warm neutral color grading coordinated with taupe and warm gray #C4BAB0, muted earth tones, understated and quiet"
+    teal_trust: "clean corporate photography, even overcast-style lighting, muted teal color grading anchored to #004D5C, cool and restrained, minimal background detail"
+    # Adapt to the specific palette in use. The point is the register
+    # (controlled, desaturated, editorially quiet), not these exact words.
+
+  text_in_image: forbidden
+  # No embedded typography, text-as-visual-element, or text rendered into images.
+  # Business needs editable text in text shapes with precisely controlled
+  # font, size, color, and position. If title slide uses a generated bg image,
+  # the title is a text shape overlaid on the image, not rendered into it.
+
+anti_patterns: # ADD to universal list
+  - expressive_typography: "signals informality, undermines credibility — stick to conservative pairings"
+  - full_bleed_on_content: "competes with data — reserve images for title/section slides"
+  - bright_saturated_accents: "feels energetic not authoritative — use muted accents that contrast without shouting"
+  - asymmetric_layouts: "business expects predictable structure — use grid-based symmetric layouts"
+  - oversized_titles: "44pt+ reads as marketing — keep titles 36-40pt"
+  - heavy_icons_illustrations: "feels educational or startup-y — let data and text carry the slide"
+  - imagery_over_data: "business audiences came for information — every content slide leads with its data or key message"

@@ -1,0 +1,199 @@
+palette:
+  # OVERRIDE: prefer muted/dark primary + high-saturation accent.
+  # Fully saturated palette is energetic but exhausting over many slides.
+  # Stronger move: muted or dark primary, one highly saturated accent —
+  # contrast makes the accent hit harder.
+  character: [confident, committed, gallery_poster]
+  # Palette's emotional register must match the subject.
+  # Luxury launch = deep, rich (burgundy, black, gold).
+  # Festival keynote = vibrancy (saturated coral, electric blue).
+  # Design portfolio = restraint (near-black + single vivid accent).
+
+  # Creative uses uniform dark backgrounds; all slides share the same
+  # dark context. No light-slide roles needed (no light:{} group).
+  # "secondary" = alternate dark surface (quote slides, section fills).
+  examples:
+    midnight_coral:
+      # Dramatic, modern, confident. Dark navy + vivid coral.
+      dark:
+        {
+          bg: "#1A1A2E",
+          secondary: "#16213E",
+          head: "#FFFFFF",
+          body: "#A8A8C0",
+          muted: "#6A6A85",
+        }
+      accent: "#E94560"
+      fonts: [Impact, Arial]
+    warm_earth:
+      # Grounded, organic, intentional. Terracotta + forest green.
+      dark:
+        {
+          bg: "#B85042",
+          secondary: "#C66A5B",
+          head: "#FFFFFF",
+          body: "#F0D4CC",
+          muted: "#DCA698",
+        }
+      accent: "#2F5B29"
+      fonts: [Georgia, Calibri]
+    monochrome_punch:
+      # Stark, high-contrast, unmistakable. Near-black + electric yellow.
+      dark:
+        {
+          bg: "#121212",
+          secondary: "#2D2D2D",
+          head: "#FFFFFF",
+          body: "#A0A0A0",
+          muted: "#6B6B6B",
+        }
+      accent: "#FFD600"
+      fonts: [Impact, Arial]
+    berry_editorial:
+      # Rich, editorial, textured. Deep berry + warm gold. Luxury magazine aesthetic.
+      dark:
+        {
+          bg: "#6D2E46",
+          secondary: "#5A2538",
+          head: "#ECE2D0",
+          body: "#D4C0B0",
+          muted: "#9A7A6A",
+        }
+      accent: "#C9985A"
+      fonts: [Palatino, Garamond]
+  # These illustrate the KIND of palette to build — not a menu to pick from.
+  # The right palette is designed for THIS presentation's subject and mood.
+  # Safe/muted palette with no strong accent = timid, not tasteful.
+  # Restraint means SELECTIVE boldness, not absence of boldness.
+
+typography:
+  # OVERRIDE: higher size contrast than universal. The gap between levels
+  # creates visual tension — large title + small body feels composed
+  # (like a magazine spread). Large title + medium body feels uncommitted.
+  sizes:
+    slide_title: { pt: "48-60", weight: bold } # OVERRIDE: bigger than universal 36-44
+    body: { pt: "13-14", weight: regular } # OVERRIDE: smaller than universal 14-16
+    stat_callout: { pt: "80+", weight: bold } # OVERRIDE: bigger than universal 60-72
+    # Stat numbers are visual events in creative — positioned asymmetrically, accent color.
+
+  # OVERRIDE: header font is not just legible — it is expressive.
+  # Sets tone the moment the first slide appears.
+  font_pairings:
+    - [Impact, Arial] # maximum typographic aggression; events, launches, loud
+    - [Palatino, Garamond] # elegant editorial; portfolios, luxury, culture
+    - [Georgia, Calibri] # warm serif + clean sans; storytelling, brand narrative
+    - [Trebuchet MS, Calibri] # friendly but distinctive; product stories, community
+
+  # ADD: italic is a real tool here.
+  italic_uses: [pull_quotes, taglines, single_line_statements]
+  # Large italic sentence, centered, on colored background = one of the
+  # strongest creative slide patterns.
+
+background:
+  # OVERRIDE: committed dark (navy/charcoal/near-black). NEVER all-white.
+  preferred: uniform_dark
+  alternate: contrast_sandwich
+  # contrast_sandwich = dark for structural slides (title/dividers/conclusion),
+  # light or colored for content. Creates rhythm — the deck breathes.
+  #
+  # What NEVER works in creative: all-white or all-light backgrounds.
+  # Creative deck on white = document, not experience.
+  # If content needs a light bg for readability: off-white or tinted,
+  # never pure white, and structural slides still provide visual contrast.
+
+layout:
+  primary: [full_bleed_bg, half_bleed, quote, stat_callout]
+  # full_bleed_bg: signature move. Image fills entire slide, text overlaid
+  #   in negative space or on color bar. Default for title/section dividers.
+  # half_bleed: workhorse content layout. Image fills one half, content in
+  #   other. Vary which half per slide.
+  # quote: single statement, large, centered or asymmetric, often italic,
+  #   on colored/dark bg. No images — power from contrast with image-heavy slides.
+  # stat_callout: oversized number (80pt+, accent color, asymmetric).
+  #   Visual events, not data tables. Punctuation for the deck.
+  sparingly: [icon_text_rows, grid]
+  # icon_text_rows: only if icons are distinctive/hand-crafted in style.
+  # grid: works only if each cell is visually rich (image+text).
+  #   Grid of text-only cells = corporate.
+  avoid: [table]
+  # Tables: almost never. Find a visual alternative (stat callouts,
+  # comparison images, infographic-style layouts).
+
+density:
+  # OVERRIDE: LESS. One point per slide, one strong visual.
+  title: "1-2 lines, no subtitle paragraphs"
+  content: "headline + 2-4 short lines max; more content = more slides"
+  data: "1 stat, 1 insight — spotlight, not dashboard"
+  quote: "1 sentence + optional attribution, nothing else"
+  # 20 slides x 1 idea > 10 slides x 2 ideas.
+  # Speaker notes carry detail. Slides carry impact.
+
+motif:
+  # ADD: creative motif principles (in addition to universal motif rules).
+  suitable_principles:
+    bold_color_blocks: "large filled shapes as section bgs, oversized rects behind images, thick accent bars — architectural, not decorative"
+    cinematic_framing: "images as film stills — wide aspect ratios, letterbox bars, deliberate bleed off one edge; 'this is a visual story'"
+    typographic_weight: "oversized words as visual elements, text that fills the slide, letters cropped at edge; needs punchy, short statements"
+  # For high-coverage anchoring: consistent background treatment (subtle gradient
+  # direction, tinted overlay on all images, dark border on all slides) or a
+  # small brand element in fixed position.
+
+image:
+  # ADD: creative-specific image guidance.
+  role: primary_content
+  # Images are primary content, not decoration. Each image should feel
+  # chosen/generated for THIS specific slide, not from a generic library.
+
+  default_medium: photography
+  # Lean editorial + cinematic: shallow DOF, intentional lighting,
+  # color grading matching palette. AVOID flat corporate photography.
+  style_modifiers:
+    - "editorial photography, cinematic color grading"
+    - "fashion magazine style editorial"
+    - "shot on medium-format analog film, pronounced grain"
+    - "Chiaroscuro lighting with harsh, high contrast"
+    - "golden hour backlighting creating long shadows"
+  # Brand aesthetics and named artistic references (see image-gen.md)
+  # are especially powerful here — widest stylistic latitude of any direction.
+
+  illustration: "for conceptual content, section dividers, decks where photography = too literal. Use styles with character — watercolor, high-fidelity 3D, bold flat with limited palettes. NEVER generic clip-art."
+
+  genre_rendering:
+    # This direction has latitude others do not. These are communicative
+    # tools, not novelties. Reach for them when tone is informal, audience
+    # will appreciate personality, or content benefits from emotional amplification.
+    manga: "exaggerates motion/emotion beyond what photography can"
+    comic_panels: "depicts cause-and-effect sequences in a single image"
+    retro_poster: "creates engagement through unexpected genre in slide context"
+    pixel_art: "nostalgia, gaming culture, tech retros"
+    propaganda_art: "bold messaging, dramatic call to action"
+    vintage_travel: "offsite invitations, location-themed decks"
+    # Some genres (retro posters, comic panels, magazine covers, propaganda art)
+    # produce text in the image. Specify exact text in quotes, or suppress
+    # with "no visible text" if you want style without typography.
+
+  ai_text_in_images:
+    # A title slide with the presentation name rendered directly into a
+    # full-bleed image can be more impactful than text shape over image.
+    # Use --reasoning for these — text rendering benefits from extra planning.
+    use_when: "title slides, key statements where integrated typography > overlaid text"
+
+  composition:
+    # Creative slides frequently need negative space for text overlay.
+    # Include "negative space on the left for text" or "subject in lower third" in prompts.
+    # For half-bleed: specify aspect ratio accordingly.
+    negative_space: required_in_prompts
+
+  resolution:
+    full_half_bleed: 2k # always — pixel density gap is most visible in creative
+    inline_smaller: 1k
+    draft_only: 512 # never for final placed images
+
+anti_patterns: # ADD to universal list
+  - bullet_lists_as_structure: "use separate shapes, visual layouts, image-text pairings"
+  - white_backgrounds: "use dark, tinted, or colored backgrounds"
+  - generic_stock_photo: "smiling professionals in bright office — use editorial, cinematic, or illustration"
+  - same_layout_every_slide: "photo slideshow ≠ presentation; alternate full-bleed/half-bleed/quote/stat"
+  - small_cautious_images: "half-bleed minimum, full-bleed preferred"
+  - text_heavy_no_hierarchy: "one point per slide, strong size contrast, let images carry weight"
+  - safe_muted_no_accent: "commit to at least one strong accent; restraint = selective boldness"

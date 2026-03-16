@@ -15,11 +15,19 @@ def test_create_basic(cli, tmp_pptx):
     assert isinstance(data["layouts"], list)
 
 
-def test_create_widescreen(cli, tmp_pptx):
-    rc, out, _ = cli("create", tmp_pptx, "--widescreen")
+def test_create_default_is_widescreen(cli, tmp_pptx):
+    rc, out, _ = cli("create", tmp_pptx)
     assert rc == 0
     data = json.loads(out)
     assert data["width"] == "13.33in"
+    assert data["height"] == "7.50in"
+
+
+def test_create_legacy(cli, tmp_pptx):
+    rc, out, _ = cli("create", tmp_pptx, "--legacy")
+    assert rc == 0
+    data = json.loads(out)
+    assert data["width"] == "10.00in"
     assert data["height"] == "7.50in"
 
 

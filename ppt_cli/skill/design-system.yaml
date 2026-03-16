@@ -1,0 +1,345 @@
+# ═══════════════════════════════════════════════════════════════════════
+# design-system.yaml — ppt-cli design reference
+# ═══════════════════════════════════════════════════════════════════════
+#
+# STRUCTURE
+#   universal:          Rules that apply to EVERY deck regardless of direction.
+#   template_analysis:  How to derive a design system from an existing deck/template.
+#   directions:         Direction-specific overrides and additions (business, creative,
+#                       educational, technical). One is selected per deck.
+#
+# INHERITANCE MODEL
+#   Each direction inherits ALL universal rules. Direction sections state only
+#   what they change or add. Conventions:
+#     # OVERRIDE: <rule>   — replaces the universal value
+#     # ADD: <rule>        — appends to the universal list/set
+#     # INHERIT            — header reminder that universal applies unless overridden
+#
+# READING ORDER
+#   1. Always read universal first.
+#   2. Read template_analysis ONLY if user provides an existing deck/template
+#      (replaces direction selection entirely).
+#   3. Read ONE direction section after direction is chosen.
+#
+# FORMAT NOTE
+#   This file is read by an LLM as structured text, not parsed by a YAML engine.
+#   Comments carry behavioral nuance and are as important as the keyed values.
+# ═══════════════════════════════════════════════════════════════════════
+
+universal:
+  # ── PALETTE ───────────────────────────────────────────────────────────
+
+  palette:
+    roles:
+      primary:
+        { share: "60-70%", usage: "backgrounds, header bars, full-slide fills" }
+      secondary:
+        {
+          share: "20-30%",
+          usage: "content cards, section backgrounds, framing shapes",
+        }
+      accent:
+        {
+          share: "5-10%",
+          usage: "key stats, callout highlights, important labels",
+        }
+      # If accent appears on >3 elements per slide, it is no longer an accent.
+      # The 60/20/10 split is a guideline, not a pixel-counting rule.
+      # The point: one color clearly dominates; accent is rare enough to draw the eye.
+
+    selection:
+      match_to_subject: required
+      # Palette must feel chosen FOR THIS presentation's subject.
+      # Test: could these colors swap into an unrelated deck? If yes, too generic.
+      # This does NOT mean literal color matching (blue for ocean). It means the
+      # palette's personality — warm/cool, muted/saturated, dark/bright — reflects
+      # the subject's emotional register. Crisis = gravity. Launch = energy.
+      # The palette is the first signal the audience reads, before any words.
+
+    image_coordination:
+      # Every AI-generated image must coordinate with the deck palette.
+      # Dominant tones of the image must not fight the slide palette.
+      # Specify palette hex values in prompts for colors that must match.
+      # For user-provided images: consider duotone, color grading, or tint overlays
+      # to unify disparate source images into a cohesive visual language.
+      match_palette: required
+
+  # ── TYPOGRAPHY ────────────────────────────────────────────────────────
+
+  typography:
+    font_pairing:
+      # Every deck needs TWO font choices: header (personality) + body (invisible, clean).
+      # Do not use the same font for both unless the direction specifically calls for it.
+      # Do not default to Arial. The header font is the cheapest way to look intentional.
+      header: "carries personality — signals formal, modern, playful, technical"
+      body: "invisible — clean, readable, stays out of the way"
+
+    sizes:
+      slide_title: { pt: "36-44", weight: bold }
+      # 36pt is the threshold where a title visually separates from body at
+      # projection distance. Below that, hierarchy flattens.
+      section_header: { pt: "20-24", weight: bold }
+      body: { pt: "14-16", weight: regular }
+      caption: { pt: "10-12", weight: regular, color: muted }
+      stat_callout: { pt: "60-72", weight: bold }
+      # Stat callouts are large enough to function as visual elements —
+      # they replace images on data-heavy slides.
+
+    bold_rules:
+      always_bold: [slide_titles, section_headers, inline_labels]
+      # Inline labels: "Revenue:", "Status:", "Timeline:" at line start.
+      never_bold: [body_paragraphs, descriptions]
+      # Bold = scannable anchors. Audience picks out structure from detail in <2s.
+      # If everything is bold, nothing is.
+
+    alignment:
+      left_always: [body, lists, descriptions, multi_line]
+      center_only: [titles, one_line_callouts, stat_numbers, quotes]
+      # NEVER center paragraphs, multi-line descriptions, or bulleted lists.
+      # Centered body text forces the eye to find a new start position each line.
+
+  # ── LAYOUT ────────────────────────────────────────────────────────────
+
+  layout:
+    vocabulary:
+      two_column: "text + image/supporting content; most versatile general layout"
+      icon_text_rows: "vertical stack: icon/circle left, bold label + description right"
+      grid: "2x2 or 2x3 content blocks, consistent internal structure per cell"
+      half_bleed: "image fills exactly one half of slide; content in other half"
+      full_bleed_bg: "image fills entire slide; text overlaid in negative space or on color bar"
+      stat_callout: "large number (60-72pt) with small label; 1-3 stats side by side"
+      comparison_cols: "2-3 columns for options/tiers/periods; consistent structure across"
+      timeline: "numbered/sequential steps, horizontal or vertical, with connectors"
+      quote: "single statement, large, centered, optional attribution"
+      section_divider: "introduces new section; minimal — title, maybe subtitle/number"
+      # Think in terms of these named patterns. Do not place shapes ad-hoc.
+
+    content_type_mapping:
+      key_points: [icon_text_rows, bullet_layout]
+      team_people: [grid_with_images, multi_column]
+      testimonials: [quote]
+      metrics_kpis: [stat_callout, comparison_cols]
+      processes: [timeline, numbered_steps]
+      case_studies: [two_column, half_bleed]
+      detailed_data: [table]
+      # For tables: consider if stat callouts or comparison columns would
+      # communicate faster. Tables are a last resort (see content_structure).
+
+    variation:
+      # NEVER repeat the same layout pattern on consecutive slides.
+      # Two stat callouts in a row or three two-columns in a row = visual monotony.
+      # Actively rotate through patterns.
+      # This does NOT mean every slide looks wildly different — the deck must
+      # feel cohesive. It means structural skeletons vary enough that the audience
+      # perceives progression, not repetition.
+      consecutive_repeat: forbidden
+
+  # ── MOTIF ─────────────────────────────────────────────────────────────
+
+  motif:
+    # A motif is NOT a single stamped element. It is a visual PRINCIPLE — a
+    # consistent design language that manifests differently per slide content.
+    # The principle is singular; the elements it produces vary by context.
+
+    principle_examples:
+      soft_rounded: "rounded frames, rounded containers, pill-shaped accents"
+      sharp_geometric: "angular bars, square crops, hard-corner cards, diagonal stripes"
+      minimal_linework: "thin borders not fills, hairline dividers, line-art icons"
+      bold_color_blocks: "large filled rects, solid color cards, thick accent bars"
+
+    coverage:
+      high_coverage: "appears on nearly every slide regardless of content: logo, sidebar, background texture, decorative element near titles"
+      content_dependent: "appears only when content type is present: rounded image frames, icon circles, styled table containers"
+      # A deck with ONLY content-dependent elements will have gaps — slides where
+      # nothing expresses the motif. Anchor with at least ONE high-coverage element
+      # that appears everywhere, then reinforce with content-dependent elements.
+
+    image_coherence:
+      # When deck uses AI images, images are content-dependent motif elements.
+      # They must express the same visual principle as the rest of the motif.
+      # Soft motif -> rounded crops, soft lighting, organic compositions.
+      # Sharp motif -> square crops, hard lighting, angular compositions.
+      # Establish a shared style fragment (palette, rendering, lighting, composition)
+      # and include it in EVERY image prompt. Images feel like a family because
+      # they share visual DNA.
+      shared_style_fragment: required
+
+    cohesion:
+      # A deck with varied layouts but no motif = unrelated slides.
+      # A deck with consistent visual language = feels designed.
+      # The motif is what makes "varied" feel "cohesive" not "random."
+
+  # ── BACKGROUND ────────────────────────────────────────────────────────
+
+  background:
+    strategies:
+      uniform_light: "all slides light background"
+      uniform_dark: "all slides dark background"
+      contrast_sandwich: "dark for structural slides (title/conclusion/dividers), light for content slides"
+      # Either approach works. What fails is NO strategy — some slides dark,
+      # some light, with no pattern the audience can anticipate.
+
+    rule: "decide strategy EARLY and commit; strategy choice is directional but HAVING one is universal"
+
+  # ── SPACING ───────────────────────────────────────────────────────────
+
+  spacing:
+    margins:
+      all_edges: "0.5in minimum"
+      # Content touching or near the edge looks cramped; edges may clip on projectors.
+      # On standard 13.333x7.5 slide: usable area is 12.333in wide x 6.5in tall
+      # (0.5in to 12.833in horizontal, 0.5in to 7.0in vertical).
+
+    gaps:
+      inter_element: "0.3in or 0.5in — pick one and use it throughout the entire deck"
+      # Mixing gap sizes (0.2in here, 0.6in there) = unintentional look.
+      # 0.3in = tighter, information-dense. 0.5in = spacious, premium.
+      # Match gap to deck density and tone. Consistency > size.
+
+    whitespace:
+      # Empty space is NOT wasted. It makes present content readable.
+      # Cramped slide signals "couldn't decide what to cut."
+      # Breathing room signals "this is what matters."
+      # When a slide feels cramped: move content to a second slide or cut —
+      # almost NEVER make elements smaller.
+
+  # ── CONTENT STRUCTURE ─────────────────────────────────────────────────
+
+  content_structure:
+    visual_element_required: true
+    # Every slide needs at least one non-text visual: image, shape, accent bar,
+    # icon, colored element. Text-only slides are forgettable.
+    # The bar is low. A colored accent bar or filled rectangle qualifies.
+    # When AI image-gen is available, images are one more option — not a
+    # replacement for simpler elements. Choose the visual that serves the content,
+    # not the most elaborate one available.
+
+    separate_shapes: true
+    # Multiple items (steps, features, metrics) = each gets its OWN text shape.
+    # NEVER concatenate items into a single text block with newlines between them.
+    # Separate shapes give independent position, size, and style control.
+    # This is one of the most important ppt-cli-specific patterns.
+
+    tables_last_resort: true
+    # Before creating a table, ask: would this work better as stat callouts,
+    # comparison columns, icon+text rows, or a generated chart image?
+    # Tables are appropriate only when data is genuinely tabular — multiple rows
+    # and columns where the reader needs to cross-reference.
+    # For 2-4 data points, a visual layout almost always communicates faster.
+
+  # ── VISUAL ACCENTS ────────────────────────────────────────────────────
+
+  visual_accents:
+    no_accent_line_under_title: true
+    # A thin colored line directly under a slide title is the single most common
+    # hallmark of generic template-driven slides. It adds no information, wastes
+    # vertical space, and signals "no design thought went into this."
+    # Use whitespace or background contrast to separate title from content.
+
+    icon_contrast:
+      # Small icons/markers must have sufficient contrast against background.
+      # If icon is similar in lightness to the background, it disappears.
+      # Fix: place icons inside filled circles of contrasting color, or use
+      # icon colors with strong value contrast against the slide background.
+      ensure: true
+
+    emphasis_through_contrast:
+      # When one element must stand out: reach for CONTRAST before effects.
+      # Accent color among muted tones. Higher saturation against desaturated.
+      # Warmer hue against cool. Bolder weight against lighter.
+      # These are reliable, clean emphasis techniques.
+      prefer: contrast
+      avoid: glow_effects
+      # Generic outer glow = amateur filter. If a luminous quality is needed,
+      # be specific: thin rim highlight, faint warm tint, slight brightness increase.
+      # Same principle for image prompts: specify treatment precisely, never "glowing."
+
+  # ── ANTI-PATTERNS (universal) ─────────────────────────────────────────
+
+  anti_patterns:
+    - consecutive_same_layout: "rotate through layout patterns; consecutive slides need different structures"
+    - centered_body_text: "left-align all body text, lists, and descriptions"
+    - text_only_slides: "add at least one non-text element — image, shape, accent bar, icon"
+    - partial_styling: "commit to design system across EVERY slide, no exceptions"
+    - edge_crowding: "keep all content >= 0.5in from slide edges"
+    - inconsistent_gaps: "pick 0.3in or 0.5in and apply uniformly throughout deck"
+    - weak_title_hierarchy: "title must be 36pt+ bold; body 14-16pt regular"
+    - equal_color_weight: "one color dominates (60-70%); accent is rare (5-10%)"
+    - concatenated_items: "split into separate shapes, one per item"
+    - accent_line_under_title: "remove; use whitespace or background contrast"
+    - low_contrast_icons: "place on contrasting circles or use high-contrast colors"
+    - generic_palette: "colors must reflect the subject's emotional register"
+    - inconsistent_image_styles: "shared style description applied to every image prompt"
+    # Direction sections may ADD to this list but never remove from it.
+
+# ═══════════════════════════════════════════════════════════════════════
+# TEMPLATE ANALYSIS
+# ═══════════════════════════════════════════════════════════════════════
+# When user provides a branded deck/template, derive the design system from it.
+# This REPLACES direction selection — do not pick business/creative/etc.
+# The derived system uses the same schema as direction-based systems, so all
+# downstream phases (build, QA, image-gen) work identically.
+
+template_analysis_file: "3-design-template.yaml"
+
+# ═══════════════════════════════════════════════════════════════════════
+# DIRECTIONS
+# ═══════════════════════════════════════════════════════════════════════
+# Direction-specific overrides and additions follow below.
+# Each direction inherits ALL universal rules and states only what it changes.
+# Four sections: business, creative, educational, technical.
+
+directions:
+  # ═══════════════════════════════════════════════════════════════════════
+  # BUSINESS
+  # ═══════════════════════════════════════════════════════════════════════
+  business:
+    # INHERIT: all universal rules apply unless overridden below.
+    # Precision, restraint, and organizational competence. Every element aligned,
+    # every choice deliberate, every slide consistent. The design is a trust signal —
+    # the care visible in formatting implies the same rigor went into the numbers.
+    # The audience (executives, board members, investors) is here to decide, not admire.
+
+    file: "3-design-business.yaml"
+    # If the user asks to see color scheme examples, point them to this file in Chrome:
+    palette_preview: "design-palettes-demo/palette-preview-business.html"
+
+  # ═══════════════════════════════════════════════════════════════════════
+  # CREATIVE
+  # ═══════════════════════════════════════════════════════════════════════
+  creative:
+    # INHERIT: all universal rules apply unless overridden below.
+    # Gallery-poster commitment to mood. NOT neutral, NOT safe.
+    # Impression over information — the audience should feel something before
+    # they understand something. The design makes a statement.
+
+    file: "3-design-creative.yaml"
+    palette_preview: "design-palettes-demo/palette-preview-creative.html"
+
+  # ═══════════════════════════════════════════════════════════════════════
+  # EDUCATIONAL
+  # ═══════════════════════════════════════════════════════════════════════
+  educational:
+    # INHERIT: all universal rules apply unless overridden below.
+    # A teaching instrument. Every design choice serves clarity and sequence.
+    # The audience is processing new information — the structure must be predictable
+    # so attention goes to content, not figuring out where things moved.
+    # Warm, approachable, signposted. Think well-designed textbook, not magazine.
+
+    file: "3-design-educational.yaml"
+    palette_preview: "design-palettes-demo/palette-preview-educational.html"
+
+  # ═══════════════════════════════════════════════════════════════════════
+  # TECHNICAL
+  # ═══════════════════════════════════════════════════════════════════════
+  technical:
+    # INHERIT: all universal rules apply unless overridden below.
+    # Structured, dense, functional. Design serves comprehension — every choice makes
+    # complex information easier to parse, not prettier to look at. If the audience
+    # notices the design, something went wrong. If the audience follows the logic
+    # effortlessly, everything went right. The audience is technical — they expect
+    # density, tolerate complexity, respect precision, and are annoyed by decoration
+    # that doesn't carry information.
+
+    file: "3-design-technical.yaml"
+    palette_preview: "design-palettes-demo/palette-preview-technical.html"

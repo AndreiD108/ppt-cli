@@ -1,0 +1,187 @@
+character:
+  [restrained, precise, IDE_native, high_contrast]
+
+  # 6 roles: bg, cards (container fills), head, body, muted, accent.
+  # Cards essential — containers/code/diags need distinct fill.
+  # Dark+light variants. Dark default; light for print/bright.
+examples:
+  gruvbox:
+    # Warm, dev-native, cozy. Technical ≠ cold.
+    dark:
+      {
+        bg: "#282828",
+        cards: "#3C3836",
+        head: "#EBDBB2",
+        body: "#A89984",
+        muted: "#928374",
+      }
+    accent: "#D65D0E"
+    fonts: [Consolas, Calibri]
+  darcula:
+    # JetBrains dark. Java/Kotlin/Python devs.
+    dark:
+      {
+        bg: "#2B2B2B",
+        cards: "#3C3F41",
+        head: "#A9B7C6",
+        body: "#9A9A9A",
+        muted: "#6A737D",
+      }
+    accent: "#CC7832"
+    fonts: [Consolas, Calibri]
+  github_dark:
+    # GitHub code view. Clean, modern, recognized.
+    dark:
+      {
+        bg: "#0D1117",
+        cards: "#161B22",
+        head: "#C9D1D9",
+        body: "#8B949E",
+        muted: "#6D7681",
+      }
+    accent: "#58A6FF"
+    fonts: [Calibri, Calibri Light]
+  solarized_dark:
+    # Schoonover classic. Muted, high-contrast, teal-cyan.
+    dark:
+      {
+        bg: "#002B36",
+        cards: "#073642",
+        head: "#93A1A1",
+        body: "#7E919A",
+        muted: "#586E75",
+      }
+    accent: "#B58900"
+    fonts: [Consolas, Calibri]
+  solarized_light:
+    # Warm variant. Print/bright-room.
+    light:
+      {
+        bg: "#FDF6E3",
+        cards: "#EEE8D5",
+        head: "#073642",
+        body: "#586E75",
+        muted: "#6B7B80",
+      }
+    accent: "#B8863A"
+    fonts: [Consolas, Calibri]
+  jetbrains_light:
+    # Clean, bright. Reads technical via blue accent+crisp contrast.
+    light:
+      {
+        bg: "#FFFFFF",
+        cards: "#F7F8FA",
+        head: "#2B2B2B",
+        body: "#555555",
+        muted: "#656565",
+      }
+    accent: "#3574F0"
+    fonts: [Calibri, Calibri Light]
+
+  # Match subject maybe: security->Solarized/GitHub; onboarding->JetBrains/Sol Light;
+  # infra->Gruvbox/Darcula.
+
+typography:
+  font_pairing:
+    # OVERRIDE: monospace headers = signature move. Sets tone, natural
+    # to technical audience. Sans fallback when non-engineers present.
+    header: "monospace preferred — Consolas, Courier New"
+    body: "clean sans — Calibri, Calibri Light"
+
+  pairings:
+    - { header: Consolas, body: Calibri, character: "dev-native, clean" }
+    - { header: Calibri, body: Calibri Light, character: "modern technical" }
+    - { header: Arial Black, body: Calibri, character: "structural, bold" }
+
+  sizes:
+    slide_title: { pt: "40-44", weight: bold } # bigger to anchor dense body
+    # Smaller stat callouts — stats carry qualifiers (latency+sys, pct+range).
+    stat_callout: { pt: "48-60", weight: bold }
+
+background:
+  # OVERRIDE: uniform dark. Mimics terminal/IDE. Accent pops on dark.
+  # Mixed audiences: contrast_sandwich — still technical w/ right typo.
+  preferred: uniform_dark
+  # Consistent. No dark+light mix w/o structural reason.
+
+layout:
+  primary: [numbered_steps, comparison_cols, two_column, grid, stat_callout]
+  sparingly: [full_bleed_bg, quote, icon_text_rows]
+  # Numbered steps: dominant. Deploys, migrations, incident response, pipelines.
+  # Comp cols: bfr/aftr, A vs B. Essential for RFCs.
+  # Two-col text+diag: workhorse.
+  # Grid 2x2/2x3: components, sys props, stages. Keep small.
+  # Full-bleed: rarely — needs full slide for info.
+  # Quote: occasional principle/constraint. Icon+text: audiences prefer grid/comp.
+
+diagrams:
+  # ADD: technical decks depend on diags most.
+  from_shapes:
+    when: "3-6 labeled nodes, straight connections"
+    how:
+      nodes: "textboxes, set-fill for bg"
+      containers: "filled rects grouping components"
+      highlight: "accent fill on discussed component"
+      flow_direction: "L-R or top-bottom; no diagonal"
+    # Even 4-node better gen when needing polish (nesting, active paths, isometric).
+  from_image_gen:
+    when: ">6 nodes or needing polish beyond flat rects"
+    # Sharp-geometric motif in prompt: hard corners, straight lines.
+    flags: "--resolution 2k (legibility)"
+    # --reasoning for many components/spatial rels.
+
+motif:
+  # OVERRIDE: struct+precision not decoration.
+  preferred: [sharp_geometric, minimal_linework, consistent_containers]
+  # Sharp: hard corners, square crops, rect bars. "Precise"+"engineered."
+  # Linework: thin borders, hairlines, monospace labels. Wireframe/blueprint.
+  # Containers: code/diag/data all same fill+border+padding. Container IS motif.
+  high_coverage_anchor: "thin accent bar top/bottom every slide"
+
+density:
+  # OVERRIDE: most content/slide of any dir.
+  # Spreading simple ideas breaks flow, forces cross-page context.
+  body_lines_per_block: "6-8 (vs 3-4)"
+  # Each block one point. Multiple points separate shapes.
+  split_rule: "by logical unit not area"
+  # Concept+diag together=one slide. Independent concepts=separate.
+  # Long seqs: one step/slide. Complex sys: one slide even if dense.
+
+image_style:
+  # Functional not atmospheric.
+
+  diagrams_and_architecture:
+    # Palette hex in prompt. Isometric 3D for infra/arch.
+    flags: "--resolution 2k (any w/ text)"
+    # --reasoning for many components/spatial rels.
+
+  screenshots_and_ui:
+    # Place in styled containers. Color-grade to palette w/ --ref+tint
+    # for cohesion beyond containers.
+    container: "filled rect, slightly larger, cards fill"
+
+  charts_and_data:
+    # Benchmarks, latency, throughput, errors, capacity.
+    # AI charts often better than shapes/Excel.
+    # Incl nums+labels. "Tufte — max data-ink, no chartjunk."
+    flags: "--resolution 2k (any w/ text)"
+
+  abstract_backgrounds:
+    # Title+dividers ONLY. Geometric/network/circuit textures.
+    # Low contrast. Short text (1-3 words) can render in monospace.
+    use_on: [title_slide, section_dividers]
+
+  avoid:
+    # Stock people, lifestyle, metaphor illus = filler.
+    - stock_people
+    - lifestyle_imagery
+    - metaphor_illustrations
+
+anti_patterns: # ADD
+  - full_bleed_lifestyle_photos: "diags, screenshots, or geometric bgs"
+  - rounded_soft_motifs: "sharp corners, straight lines, rects"
+  - low_information_density: "related together; split by logic not area"
+  - multiple_accent_colors: "one; lightness variations for secondary"
+  - decorative_icons: "reserve for meaning; shapes+fills for interest"
+  - large_empty_content_areas: "fill or reduce dims"
+  - bright_saturated_warm_primaries: "warm only muted+dark (Gruvbox); desaturation+contrast"

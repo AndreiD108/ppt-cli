@@ -34,13 +34,17 @@ def cmd_create(args):
 
     prs = Presentation(template_path) if template_path else Presentation()
 
+    # Default to 16:9 widescreen unless a template provides its own dimensions
+    if not template_path:
+        prs.slide_width = Inches(13.333)
+        prs.slide_height = Inches(7.5)
+    if args.legacy:
+        prs.slide_width = Inches(10)
+        prs.slide_height = Inches(7.5)
     if args.width:
         prs.slide_width = _parse_length(args.width)
     if args.height:
         prs.slide_height = _parse_length(args.height)
-    if args.widescreen:
-        prs.slide_width = Inches(13.333)
-        prs.slide_height = Inches(7.5)
     prs.save(args.file)
     result = {
         "created": args.file,
