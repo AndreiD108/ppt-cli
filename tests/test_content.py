@@ -71,6 +71,65 @@ def test_add_textbox_with_style(cli, deck_with_slide):
     assert "shape_id" in data
 
 
+def test_add_textbox_markdown_bold(cli, deck_with_slide):
+    path, _ = deck_with_slide
+    rc, out, _ = cli("add-textbox", path, "1", "**Header** body text")
+    assert rc == 0
+    data = json.loads(out)
+    sid = data["shape_id"]
+
+    rc, out, _ = cli("dump", path, "1")
+    dump = json.loads(out)
+    for s in dump["shapes"]:
+        if s["id"] == sid:
+            para = s["text"][0]
+            assert para["text"] == "Header body text"
+            assert "runs" in para
+            assert para["runs"][0]["text"] == "Header"
+            assert para["runs"][0].get("bold") is True
+            assert para["runs"][1]["text"] == " body text"
+            assert para["runs"][1].get("bold") is None
+            return
+    raise AssertionError("shape not found in dump")
+
+
+def test_add_textbox_markdown_with_bold_flag(cli, deck_with_slide):
+    """--bold flag makes everything bold; markdown bold stacks (both bold)."""
+    path, _ = deck_with_slide
+    rc, out, _ = cli("add-textbox", path, "1", "**Header** body",
+                      "--bold")
+    assert rc == 0
+    data = json.loads(out)
+    sid = data["shape_id"]
+
+    rc, out, _ = cli("dump", path, "1")
+    dump = json.loads(out)
+    for s in dump["shapes"]:
+        if s["id"] == sid:
+            para = s["text"][0]
+            # Both runs should be bold (--bold makes all bold)
+            for r in para["runs"]:
+                assert r.get("bold") is True
+            return
+    raise AssertionError("shape not found in dump")
+
+
+def test_add_textbox_escaped_asterisk(cli, deck_with_slide):
+    path, _ = deck_with_slide
+    rc, out, _ = cli("add-textbox", path, "1", r"Price is \*not\* final")
+    assert rc == 0
+    data = json.loads(out)
+    sid = data["shape_id"]
+
+    rc, out, _ = cli("dump", path, "1")
+    dump = json.loads(out)
+    for s in dump["shapes"]:
+        if s["id"] == sid:
+            assert s["text"][0]["text"] == "Price is *not* final"
+            return
+    raise AssertionError("shape not found in dump")
+
+
 def test_add_table(cli, deck_with_slide, tmp_path):
     path, _ = deck_with_slide
     csv_file = str(tmp_path / "data.csv")

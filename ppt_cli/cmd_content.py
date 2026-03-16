@@ -5,7 +5,8 @@ import io
 import os
 
 from .helpers import (_die, _open, _get_slide, _find_shape, _save,
-                      _parse_length, _parse_color, Inches, Pt)
+                      _parse_length, _parse_color, _parse_inline_markdown,
+                      Inches, Pt)
 from .image_gen import SUPPORTED_RATIOS as _SUPPORTED_RATIOS
 
 
@@ -206,14 +207,17 @@ def cmd_add_textbox(args):
     lines = args.text.split("\\n") if "\\n" in args.text else [args.text]
     for i, line in enumerate(lines):
         para = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
-        run = para.add_run()
-        run.text = line
-        if args.font_size:
-            run.font.size = Pt(args.font_size)
-        if args.font_color:
-            run.font.color.rgb = _parse_color(args.font_color)
-        if args.bold:
-            run.font.bold = True
+        for text, md_bold, md_italic in _parse_inline_markdown(line):
+            run = para.add_run()
+            run.text = text
+            if args.font_size:
+                run.font.size = Pt(args.font_size)
+            if args.font_color:
+                run.font.color.rgb = _parse_color(args.font_color)
+            if args.bold or md_bold:
+                run.font.bold = True
+            if md_italic:
+                run.font.italic = True
 
     _save(prs, args.file, args.output,
           extra={"shape_id": txBox.shape_id, "name": txBox.name})

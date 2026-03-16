@@ -43,6 +43,34 @@ def _parse_color(val):
     return RGBColor.from_string(val)
 
 
+_MD_SPAN_RE = re.compile(
+    r'(\*{1,3})(.+?)\1'    # emphasis: *italic*, **bold**, ***both***
+    r'|\\\*'                # escaped asterisk → literal *
+    r'|[^*\\]+'             # plain text
+    r'|.',                   # fallback (unmatched * or \)
+)
+
+
+def _parse_inline_markdown(text):
+    """Parse **bold** and *italic* into [(text, bold, italic), ...].
+
+    Text without markdown markers returns a single plain tuple.
+    Supports \\* to produce a literal asterisk.
+    """
+    if not text:
+        return [("", False, False)]
+    runs = []
+    for m in _MD_SPAN_RE.finditer(text):
+        stars = m.group(1)
+        if stars:
+            runs.append((m.group(2), len(stars) >= 2, len(stars) % 2 == 1))
+        elif m.group(0) == '\\*':
+            runs.append(('*', False, False))
+        else:
+            runs.append((m.group(0), False, False))
+    return runs or [("", False, False)]
+
+
 def _open(path):
     if not os.path.isfile(path):
         _die(f"file not found: {path}")

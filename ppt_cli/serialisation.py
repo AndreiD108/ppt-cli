@@ -48,6 +48,16 @@ def _text_frame_to_list(tf):
                     p["color"] = f"#{run.font.color.rgb}"
             except (AttributeError, TypeError):
                 pass
+            if len(para.runs) > 1:
+                runs_list = []
+                for r in para.runs:
+                    rd = {"text": r.text}
+                    if r.font.bold:
+                        rd["bold"] = True
+                    if r.font.italic:
+                        rd["italic"] = True
+                    runs_list.append(rd)
+                p["runs"] = runs_list
         paragraphs.append(p)
     return paragraphs
 
