@@ -451,6 +451,8 @@ cleanup:     delete temporary files and screenshots when you're done with them.
     s = sub.add_parser("setup", help=_setup_help)
     s.set_defaults(func=cmd_setup)
 
+    # Run setup check before argparse so --help and no-args trigger it too.
+    _check_setup(sys.argv[1] if len(sys.argv) > 1 else None)
+
     args = p.parse_args()
-    _check_setup(args.command)
     args.func(args)
