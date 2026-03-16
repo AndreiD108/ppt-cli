@@ -22,3 +22,5 @@ Read `protocol.md` (in the same directory as this file) before starting any pres
 For command composition patterns and reusable build recipes, see the `@pattern` blocks in `build-template.sh`. These cover common slide constructions (dark backgrounds, stat callouts, code containers, accent bars, etc.) and are useful reference for any task involving ppt-cli commands.
 
 AI image generation (`add-image --prompt` and `image-gen`) uses Gemini and requires a `GEMINI_API_KEY` env var. The image generation workflow, prompt patterns, and budget planning are covered in `image-gen.md`, read when the protocol directs you to.
+
+Speaker notes (verbatim presentation scripts) are covered in `speaker-notes.md`, read during S6 build. Every presentation gets a script baked into the deck via `set-notes`.

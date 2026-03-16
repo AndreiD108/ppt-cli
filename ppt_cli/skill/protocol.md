@@ -29,6 +29,15 @@ OPTIONS:  describe what each option PRODUCES, not what it IS. If the user
 
 INFER:    every question has a cost. If the answer is implied by context,
           state the assumption and move on. The user will correct if wrong.
+
+COMPOSE:  a slide is not a document. No single text shape holds more than
+          5-6 lines. Multiple content items get SEPARATE shapes with
+          independent position, size, and styling. Body placeholders are
+          for simple short-form content only — anything with structure
+          (lists, categories, workflows, multi-section) needs freeform
+          composition from multiple add-textbox calls. Every content slide
+          uses at least one non-text visual element (accent bar, colored
+          panel, stat number, callout box, image, diagram node).
 ```
 
 ## INTERACTION_STYLE
@@ -138,6 +147,12 @@ After direction chosen: !READ(design-system.yaml) -- direction-specific section
   Read `design-system.yaml` from the template directory (`template show <name>` → `design_system_path`).
   Also read layout screenshots from `screenshots/` dir.
   The design system is pre-derived — use it directly. Skip analysis commands.
+
+  Then pick the direction (business/creative/educational/technical) closest to the
+  presentation's goal and !READ its file (e.g., `3-design-technical.yaml`). The template
+  owns branding — palette, fonts, motif, layouts. The direction supplements with
+  composition philosophy — density preferences, layout priorities, image style, and
+  direction-specific anti-patterns. When the two conflict, template wins.
   >>S3
 
 ?template_without_design_system (branded deck or file path):
@@ -194,17 +209,39 @@ A: decide silently | K: propose structure, confirm | F: walk through topic by to
 
 ### S5a: slide list  !STOP
 
-Present slide list as table:
+Present slide list as table. The Composition column is REQUIRED — it names the
+build-template.sh patterns or recipes each slide will use. The Script column is
+REQUIRED — two telegraphic sentences showing the narrative angle the speaker will
+take. Together they bridge "what the slide says" → "how it looks" → "what the
+presenter says about it."
 
 ```
-| # | Layout       | Content                                               |
-|---|--------------|-------------------------------------------------------|
-| 1 | Full-bleed   | "Q1 2026 Results" — dark bg, company logo             |
-| 2 | Stat callouts| Three key metrics: revenue, growth, retention         |
-| 3 | Two-column   | Product highlights — text left, generated image right |
+| # | Layout       | Composition                     | Content                              | Script                                                         |
+|---|--------------|---------------------------------|--------------------------------------|----------------------------------------------------------------|
+| 1 | Full-bleed   | full-bleed-image + overlay text  | "Q1 2026 Results" — dark bg, logo    | Hook: gap between effort and results. Land the quarter's story |
+| 2 | Blank        | stat-callout (3 across)          | Revenue, growth, retention metrics   | Numbers first, then why retention is the real headline          |
+| 3 | Blank        | half-bleed-image + accent-bar    | Product highlights — text + image    | Walk through launch sequence. Callback to Q3 bet               |
+| 4 | Blank        | diagram-nodes (5 nodes, L→R)     | Architecture — services, connections | Orient axes, then trace the request path. Bottleneck reveal    |
+| 5 | Content      | recipe:panel-bullets             | Key features — 3 accent panels       | One sentence per panel, building momentum. Close with CTA      |
 ```
 
-Keep descriptions short, scannable in 15 seconds.
+Composition column rules:
+- Reference @pattern names from build-template.sh, or use self-descriptive
+  composition labels (e.g., "two-column-with-accents", "panel-bullets",
+  "stats-with-context", "accent-header-bullets", "callout-box-with-list").
+- Include shape counts or structural hints (e.g., "3 across", "L→R", "2 columns").
+- "placeholder title + set-text" alone is NEVER sufficient for content slides.
+  If a slide has structured content, it needs freeform shapes.
+- Verify layout variation: no two consecutive slides share the same composition.
+
+Script column rules:
+- Two short sentences in telegraphic grammar. Shows the NARRATIVE ANGLE —
+  what story the speaker tells around the visible content.
+- Must reveal the interpretive frame, not repeat the Content column.
+  "Revenue metrics" (content) → "Numbers first, then why retention matters" (script).
+- User approves both visual plan AND narrative plan in one pass.
+
+Keep content descriptions short, scannable in 15 seconds.
 
 !ASK("Does this look right? If so, I'll go ahead and build it.")
 
@@ -237,6 +274,7 @@ Do NOT enter plan mode or call any tools this turn. Table + question only.
 ### S6: build and verify
 
 !READ(build-template.sh)
+!READ(speaker-notes.md)
 
 ```
 ASSERT  build_method = SCRIPT  [scope: NEW_PRESENTATION, DECK_CONVERSION]
@@ -245,6 +283,24 @@ ASSERT  build_method = SCRIPT  [scope: NEW_PRESENTATION, DECK_CONVERSION]
 ASSERT  each slide_N() is idempotent
 ASSERT  fix_method = edit_script + rerun  [scope: NEW_PRESENTATION, DECK_CONVERSION]
         # NEVER hand-edit XML for scriptable issues
+ASSERT  composition != placeholder_only
+        # Every content slide uses at least one freehand shape (accent bar,
+        # colored panel, stat number, callout box, diagram node). A slide
+        # built with ONLY set-title + set-text into placeholders is a text
+        # dump, not a presentation slide. The S5a Composition column
+        # pre-commits each slide to specific patterns — follow through.
+ASSERT  no_text_walls
+        # No single text shape exceeds 5-6 lines. If content is longer,
+        # split across multiple shapes with independent styling, or split
+        # across slides. Scrolling bullet lists in a giant text block are
+        # documents, not slides.
+ASSERT  notes = verbatim_script
+        # Every slide gets a set-notes call in its slide_N() function.
+        # The note is a VERBATIM speaker script — the actual words to say,
+        # not coaching, not suggestions, not bullet points. Written using
+        # the S5a Script column as the narrative plan. See speaker-notes.md
+        # for structure (hook/core/transition), delivery cues, timing,
+        # and direction voice. Missing facts: ask the user, never fabricate.
 ```
 
 **Build:**
@@ -270,6 +326,9 @@ alignment:   column_misalign, title_y_varies, content_area_shifts
 contrast:    light/light, dark/dark, small_low_contrast, icon_blend
 consistency: font_change, palette_violation, partial_styling, monotony
 template:    ?template_based: palette_match, font_match, spacing_match, motif_match
+density:     >5 lines in single text shape, prose paragraphs, bullet walls
+composition: content slide with 0 freehand shapes, placeholder-only build
+monotony:    same visual structure >2 consecutive slides, no pattern variation
 ```
 
 QA_SCREENSHOTS:

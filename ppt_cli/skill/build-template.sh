@@ -189,6 +189,15 @@ set -euo pipefail
 #   ppt-cli set-text "$PPTX" N --shape-id <body_placeholder_id> "Body content"
 #   # Add freehand shapes only for elements the layout doesn't provide.
 #
+#   # WARNING: set-title + set-text into placeholders is the STARTING POINT,
+#   # not the complete slide. For any content slide with structure (lists,
+#   # categories, workflows, multi-section), add freehand shapes ON TOP of
+#   # placeholders: accent bars, callout panels, stat numbers, extra textboxes
+#   # with independent styling. Placeholder-only slides are text dumps.
+#   # Use placeholders for the title and maybe a short subtitle, then compose
+#   # the actual content from freehand shapes. Or use team-review/blank layouts
+#   # and compose everything from scratch.
+#
 # @pattern fine-tune-styling
 #   # Post-build styling adjustments — font, fill, position.
 #   ppt-cli set-font "$PPTX" N --shape-id "$SID" \
