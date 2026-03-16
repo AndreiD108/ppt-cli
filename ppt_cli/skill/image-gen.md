@@ -101,7 +101,7 @@ Style:        genre + color grading + film/lens. Emotional register.
 
 Dimensions stack without degradation: rich style + simple subject works well. When the composition is too complex for a single prompt (15-20+ specific positioned items), break into layers and compose on the slide.
 
-When a color must exactly match the theme, specify hex: `"deep navy #1A1A2E background"`. For creative-latitude colors, natural language is fine (`"warm coral"`, `"muted teal"`).
+Specify hex for colors that tie the image to the deck — backgrounds, accents, color grading targets, lighting hues. Natural language for scene-internal colors that don't need to match across slides.
 
 ---
 
@@ -257,8 +257,18 @@ functional (body copy, descriptions). Use text shapes overlaid on the image inst
 RULES:
   1. Enclose text in quotes within the prompt: the word "INNOVATE"
   2. Specify font style: "bold white sans-serif" | "thin minimalist" | "heavy Impact-style"
+     Font style includes material treatments when text is THE visual element.
+     Clean typography when overlay; material treatments when subject.
   3. Specify placement: "centered at top" | "bottom-left corner" | "filling center"
-  4. Keep short: 1-3 words most reliable. Sentences work but error rate increases.
+  4. Keep short: 1-5 words most reliable. Multiple sentences work but error rate increases.
+
+WORKFLOW: text in stylized images
+  Sentences and short phrases: prompt directly — reliable for headlines, labels,
+  captions, short statements.
+  Dense or exact text (code listings, terminal output, data tables): use --ref with
+  a screenshot or render of the text, if available. The model reproduces reference
+  text faithfully while applying the prompted visual treatment (CRT screen,
+  chalkboard, neon sign, printed page, notebook).
 
 TRAP:   over-prompting spatial relationships for text + multiple elements.
         Focus on 3-4 key dimensions; break complex compositions into layers.
@@ -522,8 +532,8 @@ Pass an existing image as `--ref` and describe the modification. Same model, sam
 Five photographs from five sources, all color-graded to the same palette, look intentionally designed. Without processing, they look like a collage.
 
 ### Background and Environment
-- **Background replacement**: `"replace the background with a clean dark navy gradient"` — team headshots, product images, consistent backdrops
-- **Background removal**: `"remove the background, leave white"` or `"leave transparent"` — isolate subjects
+- **Background replacement**: frame as a "professional reshoot" or "color-graded composite", not just a background "replacement". `"Replace the background with X"` produces a cheap cutout.
+- **Background removal**: `"remove the background, leave white"` or `"leave transparent"` — isolate subjects. Works well because isolation on solid is a well-defined operation.
 - **Environment change**: `"place this product on a weathered oak desk with soft studio lighting"` — re-contextualize
 
 ### Effects and Treatments
